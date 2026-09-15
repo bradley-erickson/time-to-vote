@@ -1,0 +1,21 @@
+services:
+  time-to-vote:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mounts, not named volumes — these directories already exist
+      # with real content on the host (contestants.json, the *.example.json
+      # fallbacks, whatever scrape_castaways.py has downloaded into
+      # static/images/), and a bind mount shows that content as-is rather
+      # than a named volume's usual "seed once, then diverge" behavior.
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./static:/app/static
+
+# README's own plan: run this alongside a `cloudflared` service (or the
+# systemd-based cloudflared install already on the Pi) pointed at
+# http://localhost:8000 — nothing here changes that, it just moves the app
+# itself into a container so a `docker compose up -d --build` is the whole
+# deploy instead of the venv/systemd-service dance the README describes.
