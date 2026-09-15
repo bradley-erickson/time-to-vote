@@ -1,0 +1,63 @@
+[
+  {
+    "id": "start",
+    "title": "Season Start",
+    "subtitle": "Fill this out once, before the season premieres.",
+    "questions": [
+      {
+        "id": "final_three",
+        "prompt": "Final 3",
+        "pick_count": 3
+      },
+      {
+        "id": "idol",
+        "prompt": "Finds hidden immunity idol",
+        "pick_count": 1
+      },
+      {
+        "id": "butcher",
+        "prompt": "Butchers challenge",
+        "pick_count": 1
+      },
+      {
+        "id": "challenge_beast",
+        "prompt": "Challenge beast",
+        "pick_count": 1
+      },
+      {
+        "id": "votes_against",
+        "prompt": "Most votes against",
+        "pick_count": 1
+      },
+      {
+        "id": "winner",
+        "prompt": "Sole Survivor",
+        "pick_count": 1,
+        "color": "#e63946"
+      }
+    ]
+  },
+  {
+    "id": "merge",
+    "title": "At the Merge",
+    "subtitle": "Fill this out once, right after the merge episode airs.",
+    "questions": [
+      {
+        "id": "final_three",
+        "prompt": "Final 3",
+        "pick_count": 3
+      },
+      {
+        "id": "votes_against",
+        "prompt": "Most votes against",
+        "pick_count": 1
+      },
+      {
+        "id": "winner",
+        "prompt": "Sole Survivor",
+        "pick_count": 1,
+        "color": "#e63946"
+      }
+    ]
+  }
+]

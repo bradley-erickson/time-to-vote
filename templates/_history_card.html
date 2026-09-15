@@ -1,0 +1,24 @@
+{% macro history_card(event) %}
+<div class="history-card {{ 'history-text' if event.type == 'text' else 'history-vote-out' }}">
+  {% if event.label %}
+  <span class="history-label">{{ event.label }}</span>
+  {% endif %}
+  {% if event.contestants %}
+  <div class="history-avatars">
+    {% for c in event.contestants %}
+    <img src="{{ c.image }}" alt="{{ c.name }}" title="{{ c.name }}">
+    {% endfor %}
+  </div>
+  <span class="history-names">{{ event.contestants | map(attribute="first_name") | join(", ") }}</span>
+  {% endif %}
+  {% if event.jury %}
+  <span class="history-episode">Jury</span>
+  {% endif %}
+  {% if event.episode %}
+  <span class="history-episode">Ep {{ event.episode }}</span>
+  {% endif %}
+  {% if event.note %}
+  <span class="history-note">{{ event.note }}</span>
+  {% endif %}
+</div>
+{% endmacro %}

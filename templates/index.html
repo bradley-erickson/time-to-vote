@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Time to Vote</h1>
+<p class="subtitle">Each round is filled out once — pick your name, answer every question, lock it in.</p>
+
+<div class="category-grid">
+  {% for r in rounds %}
+  <a class="category-card" href="/kiosk/{{ r.id }}">
+    <h2>{{ r.title }}</h2>
+    <p>{{ r.subtitle }}</p>
+    {% if r.status %}
+    <p class="locked-count">{{ r.status }}</p>
+    {% endif %}
+    <p class="locked-count">
+      {{ locked_by_round[r.id] | length }} / {{ players | length }} locked in
+    </p>
+  </a>
+  {% endfor %}
+
+  <a class="category-card" href="/demo">
+    <h2>Demo</h2>
+    <p>Walk through the voting flow — nothing here is saved.</p>
+  </a>
+
+  <a class="category-card" href="/results">
+    <h2>Results</h2>
+    <p>See what's been locked in so far, and the season timeline.</p>
+  </a>
+
+  <a class="category-card" href="/admin">
+    <h2>Settings</h2>
+    <p>Manage the cast, tribes, and history.</p>
+  </a>
+</div>
+{% endblock %}

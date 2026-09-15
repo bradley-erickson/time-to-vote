@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% from "_history_card.html" import history_card %}
+{% block title %}Settings · Time to Vote{% endblock %}
+{% block content %}
+<a class="back-link" href="/">&larr; Home</a>
+<h1>Settings</h1>
+<p class="subtitle">
+  Contestant and history management. No login — anyone with this URL on
+  your network can edit this, so it's really just for whoever's running
+  the laptop.
+</p>
+
+<div class="admin-tabs">
+  <a class="admin-tab-link {{ 'active' if active_tab == 'history' }}" href="/admin?tab=history">History</a>
+  <a class="admin-tab-link {{ 'active' if active_tab == 'contestants' }}" href="/admin?tab=contestants">Contestants</a>
+  <a class="admin-tab-link {{ 'active' if active_tab == 'tribes' }}" href="/admin?tab=tribes">Tribes</a>
+  <a class="admin-tab-link {{ 'active' if active_tab == 'players' }}" href="/admin?tab=players">Players</a>
+</div>
+
+{% if active_tab == 'history' %}
+<section class="results-section">
+  <form method="post" action="/admin/settings/toggle_jury_override" class="jury-override-row">
+    <span>
+      Jury round testing override:
+      <strong class="{{ 'jury-override-on' if jury_override else '' }}">{{ 'ON' if jury_override else 'OFF' }}</strong>
+      — when on, Jury Predictions opens with whoever's currently active, skipping the "exactly 3 left" requirement.
+    </span>
+    <button type="submit" class="link-btn">{{ 'turn off' if jury_override else 'turn on' }}</button>
+  </form>
+
+  {% if history %}
+  <div class="admin-history-list">
+    {% for event in history %}
+    <div class="admin-history-row">
+      {{ history_card(event) }}
+      <form method="post" action="/admin/history/delete">
+        <input type="hidden" name="id" value="{{ event.id }}">
+        <button type="submit" class="link-btn">remove</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No history yet.</p>
+  {% endif %}
+
+  <div class="admin-forms">
+    <form method="post" action="/admin/history/add" class="admin-card">
+      <h3>Mark a vote-out</h3>
+      <input type="hidden" name="type" value="vote_out">
+      <p class="pick-hint">Check everyone voted out this night (more than one for a double boot).</p>
+      <div class="admin-checkbox-list">
+        {% for c in active_contestants %}
+        <label class="admin-checkbox"><input type="checkbox" name="contestants" value="{{ c.id }}"> {{ c.name }}</label>
+        {% endfor %}
+      </div>
+      <label class="pick-hint" for="vo-episode">Episode</label>
+      <input type="number" id="vo-episode" name="episode" min="1" placeholder="#">
+      <input type="text" name="note" placeholder="Note (optional)">
+      <label class="admin-checkbox"><input type="checkbox" name="jury"> Jury member(s) — counts toward jury predictions</label>
+      <button type="submit" class="big-btn">Add vote-out</button>
+    </form>
+
+    <form method="post" action="/admin/history/add" class="admin-card">
+      <h3>Add an event</h3>
+      <input type="hidden" name="type" value="text">
+      <p class="pick-hint">A challenge win, a tribe swap, an idol find — anything worth marking.</p>
+      <input type="text" name="label" placeholder="Label" list="event-labels" required>
+      <datalist id="event-labels">
+        <option value="Challenge Win">
+        <option value="Idol Found">
+        <option value="Advantage Found">
+        <option value="Tribe Swap">
+        <option value="Merge">
+      </datalist>
+      <label class="pick-hint">Contestant(s) — optional, check more than one for a team win</label>
+      <div class="admin-checkbox-list">
+        {% for c in active_contestants %}
+        <label class="admin-checkbox"><input type="checkbox" name="contestants" value="{{ c.id }}"> {{ c.name }}</label>
+        {% endfor %}
+      </div>
+      <label class="pick-hint" for="ev-episode">Episode</label>
+      <input type="number" id="ev-episode" name="episode" min="1" placeholder="#">
+      <input type="text" name="note" placeholder="Note (optional, e.g. how it happened)">
+      <button type="submit" class="big-btn">Add event</button>
+    </form>
+  </div>
+</section>
+
+{% elif active_tab == 'contestants' %}
+<section class="results-section">
+  <div class="admin-contestant-list">
+    {% for c in contestants %}
+    <div class="admin-contestant-row">
+      <img src="{{ c.image }}" alt="{{ c.name }}" class="admin-contestant-thumb">
+      <div class="admin-contestant-info">
+        <strong>{{ c.name }}</strong>
+        <div class="tribe-bar" style="width: 120px;">
+          {% for color in c.tribe_colors %}
+          <span class="tribe-bar-segment" style="background: {{ color }};"></span>
+          {% endfor %}
+        </div>
+        <div class="admin-tribe-chips">
+          {% for tid in c.tribes %}
+          <form method="post" action="/admin/contestants/{{ c.id }}/remove_tribe" class="admin-tribe-chip">
+            <span>{{ c.tribe_names[loop.index0] }}</span>
+            <input type="hidden" name="index" value="{{ loop.index0 }}">
+            <button type="submit" class="link-btn">x</button>
+          </form>
+          {% endfor %}
+        </div>
+      </div>
+      <form method="post" action="/admin/contestants/{{ c.id }}/add_tribe" class="admin-add-tribe">
+        <select name="tribe_id">
+          {% for t in tribes %}
+          <option value="{{ t.id }}">{{ t.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="link-btn">+ add tribe</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% elif active_tab == 'tribes' %}
+<section class="results-section">
+  <div class="admin-tribe-rows">
+    {% for t in tribes %}
+    <form method="post" action="/admin/tribes/update" class="admin-tribe-row">
+      <input type="hidden" name="id" value="{{ t.id }}">
+      <input type="color" name="color" value="{{ t.color }}">
+      <input type="text" name="name" value="{{ t.name }}">
+      <button type="submit" class="link-btn">save</button>
+    </form>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="/admin/tribes/add" class="admin-card admin-add-form">
+    <h3>Add another tribe</h3>
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="color" name="color" value="#d9a441">
+    <button type="submit" class="big-btn">Add tribe</button>
+  </form>
+</section>
+
+{% elif active_tab == 'players' %}
+<section class="results-section">
+  <p class="subtitle">Your friend group — whoever shows up in the name-card picker when voting.</p>
+  <div class="admin-tribe-rows">
+    {% for p in players %}
+    <form method="post" action="/admin/players/remove" class="admin-tribe-row">
+      <span style="flex: 1;">{{ p }}</span>
+      <input type="hidden" name="name" value="{{ p }}">
+      <button type="submit" class="link-btn">remove</button>
+    </form>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="/admin/players/add" class="admin-card admin-add-form">
+    <h3>Add a player</h3>
+    <input type="text" name="name" placeholder="Name" required>
+    <button type="submit" class="big-btn">Add player</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

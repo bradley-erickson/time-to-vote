@@ -1,0 +1,191 @@
+[
+  {
+    "id": "c1",
+    "name": "Aaliyah Puglia",
+    "image": "/static/images/contestants/aaliyah-puglia.png",
+    "tribes": [],
+    "age": "24",
+    "hometown": "Providence, RI",
+    "occupation": "Chef"
+  },
+  {
+    "id": "c2",
+    "name": "Alexis Levine",
+    "image": "/static/images/contestants/alexis-levine.png",
+    "tribes": [],
+    "age": "34",
+    "hometown": "Atlanta, GA",
+    "occupation": "Criminal Defense Attorney"
+  },
+  {
+    "id": "c3",
+    "name": "Ana Sani",
+    "image": "/static/images/contestants/ana-sani.png",
+    "tribes": [],
+    "age": "34",
+    "hometown": "Toronto, ON",
+    "occupation": "Voice Actress"
+  },
+  {
+    "id": "c4",
+    "name": "Brady Booker",
+    "image": "/static/images/contestants/brady-booker.png",
+    "tribes": [],
+    "age": "27",
+    "hometown": "Knoxville, TN",
+    "occupation": "Pro Wrestler"
+  },
+  {
+    "id": "c5",
+    "name": "Carter Krull",
+    "image": "/static/images/contestants/carter-krull.png",
+    "tribes": [],
+    "age": "24",
+    "hometown": "Sioux Falls, SD",
+    "occupation": "Livestock Farmer"
+  },
+  {
+    "id": "c6",
+    "name": "Cristian Chavez",
+    "image": "/static/images/contestants/cristian-chavez.png",
+    "tribes": [],
+    "age": "25",
+    "hometown": "Salt Lake City, UT",
+    "occupation": "Head of HR"
+  },
+  {
+    "id": "c7",
+    "name": "Danny Kilby",
+    "image": "/static/images/contestants/danny-kilby.png",
+    "tribes": [],
+    "age": "30",
+    "hometown": "London, ON",
+    "occupation": "Game Designer"
+  },
+  {
+    "id": "c8",
+    "name": "Devin Way",
+    "image": "/static/images/contestants/devin-way.png",
+    "tribes": [],
+    "age": "33",
+    "hometown": "Los Angeles, CA",
+    "occupation": "Actor"
+  },
+  {
+    "id": "c9",
+    "name": "Eric Macksoud",
+    "image": "/static/images/contestants/eric-macksoud.png",
+    "tribes": [],
+    "age": "34",
+    "hometown": "Windsor Locks, CT",
+    "occupation": "Mental Health Counselor"
+  },
+  {
+    "id": "c10",
+    "name": "Jelly Loblack",
+    "image": "/static/images/contestants/jelly-loblack.png",
+    "tribes": [],
+    "age": "29",
+    "hometown": "Bloomington, IN",
+    "occupation": "Sociology Professor"
+  },
+  {
+    "id": "c11",
+    "name": "Jenna Doore",
+    "image": "/static/images/contestants/jenna-doore.png",
+    "tribes": [],
+    "age": "30",
+    "hometown": "Toledo, OH",
+    "occupation": "Wedding Photographer"
+  },
+  {
+    "id": "c12",
+    "name": "Kristin Flickinger",
+    "image": "/static/images/contestants/kristin-flickinger.png",
+    "tribes": [],
+    "age": "49",
+    "hometown": "Santa Barbara, CA",
+    "occupation": "Crisis Management"
+  },
+  {
+    "id": "c13",
+    "name": "Lewis Kelly",
+    "image": "/static/images/contestants/lewis-kelly.png",
+    "tribes": [],
+    "age": "28",
+    "hometown": "Corozal, PR",
+    "occupation": "Farmer"
+  },
+  {
+    "id": "c14",
+    "name": "Linnea Capobianco",
+    "image": "/static/images/contestants/linnea-capobianco.png",
+    "tribes": [],
+    "age": "25",
+    "hometown": "Jersey City, NJ",
+    "occupation": "Entrepreneur"
+  },
+  {
+    "id": "c15",
+    "name": "Maggie Nestor",
+    "image": "/static/images/contestants/maggie-nestor.png",
+    "tribes": [],
+    "age": "40",
+    "hometown": "Charles Town, WV",
+    "occupation": "Farmer"
+  },
+  {
+    "id": "c16",
+    "name": "Mike Pinsky",
+    "image": "/static/images/contestants/mike-pinsky.png",
+    "tribes": [],
+    "age": "32",
+    "hometown": "New York City, NY",
+    "occupation": "Baseball Executive"
+  },
+  {
+    "id": "c17",
+    "name": "Ori Jean-Charles",
+    "image": "/static/images/contestants/ori-jean-charles.png",
+    "tribes": [],
+    "age": "27",
+    "hometown": "Spring Valley, NY",
+    "occupation": "Personal Trainer"
+  },
+  {
+    "id": "c18",
+    "name": "Patt Cannaday",
+    "image": "/static/images/contestants/patt-cannaday.png",
+    "tribes": [],
+    "age": "33",
+    "hometown": "Washington, DC",
+    "occupation": "Federal Prosecutor"
+  },
+  {
+    "id": "c19",
+    "name": "Rob Antonson",
+    "image": "/static/images/contestants/rob-antonson.png",
+    "tribes": [],
+    "age": "40",
+    "hometown": "Cumberland, RI",
+    "occupation": "Airline Gate Agent"
+  },
+  {
+    "id": "c20",
+    "name": "Sharonda Cox",
+    "image": "/static/images/contestants/sharonda-cox.png",
+    "tribes": [],
+    "age": "34",
+    "hometown": "Richmond, KY",
+    "occupation": "Resident, OBGYN"
+  },
+  {
+    "id": "c21",
+    "name": "Thien An Nguyen",
+    "image": "/static/images/contestants/thien-an-nguyen.png",
+    "tribes": [],
+    "age": "24",
+    "hometown": "Fort Worth, TX",
+    "occupation": "Medical Student"
+  }
+]

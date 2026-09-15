@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "time-to-vote",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["main:app", "--host", "127.0.0.1", "--port", "8010"],
+      "port": 8010
+    }
+  ]
+}

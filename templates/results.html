@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "_history_card.html" import history_card %}
+{% block title %}Results · Time to Vote{% endblock %}
+{% block main_class %}main-wide{% endblock %}
+{% block content %}
+<a class="back-link" href="/">&larr; Home</a>
+<h1>Results</h1>
+<p class="subtitle">Every locked-in submission, with its integrity check.</p>
+
+{% if history %}
+<section class="results-section">
+  <h2>History</h2>
+  <div class="history-strip history-strip-static">
+    {% for event in history %}
+    {{ history_card(event) }}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% for r in rounds %}
+<section class="results-section">
+  <h2>{{ r.title }}</h2>
+  {% if data[r.id] %}
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Player</th>
+        {% for q in r.questions %}
+        <th>{{ q.prompt }}</th>
+        {% endfor %}
+        <th>Locked at (UTC)</th>
+        <th>Integrity</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in data[r.id] %}
+      <tr>
+        <td>{{ row.player }}</td>
+        {% for answer in row.answers %}
+        <td>
+          <div class="pick-avatars">
+            {% for c in answer.picks %}
+            <img src="{{ c.image }}" alt="{{ c.name }}" title="{{ c.name }}">
+            {% endfor %}
+          </div>
+          <span class="pick-names">{{ answer.picks | map(attribute="first_name") | join(", ") }}</span>
+        </td>
+        {% endfor %}
+        <td>{{ row.locked_at }}</td>
+        <td>
+          {% if row.verified %}
+            <span class="badge badge-ok">verified</span>
+          {% else %}
+            <span class="badge badge-bad">hash mismatch</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="empty">No one has locked in yet.</p>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

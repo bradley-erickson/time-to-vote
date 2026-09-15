@@ -1,0 +1,427 @@
+<div class="wizard" id="wizard" data-mode="{{ mode }}" data-submit-url="{{ submit_url }}">
+  {% if mode == 'kiosk' %}
+  <div class="wizard-step kiosk-idle" id="step-idle">
+    <a class="back-link kiosk-idle-back" href="/">&larr; Home</a>
+    <h1>{{ round.title }}</h1>
+    <p>Tap anywhere to start voting</p>
+  </div>
+  {% endif %}
+
+  <div class="wizard-step" id="step-player" {% if mode == 'kiosk' %}hidden{% endif %}>
+    <a class="back-link" href="/">&larr; Home</a>
+    <h1 class="wizard-title">{{ round.title }}</h1>
+    <p class="wizard-subtitle">{{ round.subtitle }}</p>
+    {% if mode == 'demo' %}
+    <p class="banner banner-demo">Demo mode — nothing you do on this page is saved.</p>
+    {% endif %}
+    <p class="pick-hint">Who are you?</p>
+    <div class="player-grid" id="player-grid"></div>
+    <button type="button" id="start-btn" class="big-btn" disabled>Continue</button>
+  </div>
+
+  <div class="wizard-step" id="step-questions" hidden>
+    <div class="wizard-header">
+      <div class="wizard-header-top">
+        <div class="wizard-progress" id="wizard-progress"></div>
+        <div class="wizard-header-actions">
+          <button type="button" id="next-btn" class="big-btn wizard-lock-btn" hidden>Next</button>
+          <button type="button" id="lock-btn" class="big-btn wizard-lock-btn" disabled>Lock In</button>
+        </div>
+      </div>
+      <div class="wizard-tabs" id="wizard-tabs"></div>
+      <p class="pick-hint" id="wizard-hint"></p>
+    </div>
+    <div class="contestant-grid wizard-grid" id="wizard-grid"></div>
+    <div class="history-strip" id="history-strip" hidden></div>
+  </div>
+
+  <div class="wizard-step" id="step-done" hidden>
+    <h1 class="wizard-title" id="done-title">Locked in!</h1>
+    <p class="wizard-subtitle" id="done-subtitle"></p>
+    <p class="wizard-subtitle" id="done-hint" hidden>Tap anywhere to continue</p>
+    {% if mode == 'demo' %}
+    <button type="button" id="demo-restart-btn" class="big-btn">Restart demo</button>
+    <p><a class="back-link" href="/">&larr; Exit demo</a></p>
+    {% elif mode == 'normal' %}
+    <p><a class="big-btn" href="/">Back to rounds</a></p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+(function () {
+  const ROUND = {{ round | to_json | safe }};
+  const CONTESTANTS = {{ contestants | to_json | safe }};
+  const HISTORY = {{ history | to_json | safe }};
+  const PLAYERS = {{ players | to_json | safe }};
+  const INITIAL_LOCKED = {{ locked_players | to_json | safe }};
+  const PALETTE = ['#d9a441', '#4caf6c', '#5fa8d3', '#c77dff', '#ff8fa3', '#ffb347'];
+
+  const wizard = document.getElementById('wizard');
+  const MODE = wizard.dataset.mode;
+  const SUBMIT_URL = wizard.dataset.submitUrl;
+
+  const stepIdle = document.getElementById('step-idle');
+  const stepPlayer = document.getElementById('step-player');
+  const stepQuestions = document.getElementById('step-questions');
+  const stepDone = document.getElementById('step-done');
+  const playerGrid = document.getElementById('player-grid');
+  const startBtn = document.getElementById('start-btn');
+  const lockBtn = document.getElementById('lock-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const grid = document.getElementById('wizard-grid');
+  const historyStrip = document.getElementById('history-strip');
+  const progressEl = document.getElementById('wizard-progress');
+  const tabsEl = document.getElementById('wizard-tabs');
+  const hintEl = document.getElementById('wizard-hint');
+  const doneTitle = document.getElementById('done-title');
+  const doneSubtitle = document.getElementById('done-subtitle');
+  const doneHint = document.getElementById('done-hint');
+  const demoRestartBtn = document.getElementById('demo-restart-btn');
+
+  const lockedSet = new Set(INITIAL_LOCKED);
+  let player = null;
+  let activeIndex = 0;
+  let answers = {};
+  let doneTimer = null;
+
+  function renderPlayerGrid() {
+    playerGrid.innerHTML = '';
+    PLAYERS.forEach((p) => {
+      const isLocked = MODE !== 'demo' && lockedSet.has(p);
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'player-card' + (p === player ? ' selected' : '') + (isLocked ? ' locked' : '');
+      card.dataset.name = p;
+      card.disabled = isLocked;
+      const label = document.createElement('span');
+      label.textContent = p;
+      card.appendChild(label);
+      if (isLocked) {
+        const tag = document.createElement('span');
+        tag.className = 'player-card-tag';
+        tag.textContent = 'locked';
+        card.appendChild(tag);
+      }
+      card.addEventListener('click', () => selectPlayer(p));
+      playerGrid.appendChild(card);
+    });
+  }
+
+  function selectPlayer(name) {
+    player = name;
+    startBtn.disabled = false;
+    Array.from(playerGrid.children).forEach((c) => {
+      c.classList.toggle('selected', c.dataset.name === name);
+    });
+  }
+
+  function resetState() {
+    clearTimeout(doneTimer);
+    player = null;
+    activeIndex = 0;
+    answers = {};
+    startBtn.disabled = true;
+    renderPlayerGrid();
+    doneHint.hidden = true;
+    stepDone.hidden = true;
+    stepQuestions.hidden = true;
+    if (MODE === 'kiosk') {
+      stepPlayer.hidden = true;
+      stepIdle.hidden = false;
+    } else {
+      stepPlayer.hidden = false;
+    }
+  }
+
+  if (stepIdle) {
+    stepIdle.addEventListener('click', (e) => {
+      if (e.target.closest('a')) return;
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+      stepIdle.hidden = true;
+      stepPlayer.hidden = false;
+    });
+  }
+
+  startBtn.addEventListener('click', () => {
+    if (!player) return;
+    activeIndex = 0;
+    answers = {};
+    ROUND.questions.forEach((q) => { answers[q.id] = []; });
+    stepPlayer.hidden = true;
+    stepQuestions.hidden = false;
+    progressEl.textContent = `Voting as ${player}`;
+    renderTabs();
+    renderQuestion();
+  });
+
+  function isComplete(index) {
+    const q = ROUND.questions[index];
+    return (answers[q.id] || []).length === q.pick_count;
+  }
+
+  function allComplete() {
+    return ROUND.questions.every((_, i) => isComplete(i));
+  }
+
+  function colorFor(index) {
+    const q = ROUND.questions[index];
+    return q.color || PALETTE[index % PALETTE.length];
+  }
+
+  function ringsFor(contestantId) {
+    const shadows = [];
+    let pos = 0;
+    ROUND.questions.forEach((q, i) => {
+      if ((answers[q.id] || []).includes(contestantId)) {
+        pos += 1;
+        shadows.push(`0 0 0 ${pos * 4}px ${colorFor(i)}`);
+      }
+    });
+    return shadows.join(', ');
+  }
+
+  function renderTabs() {
+    tabsEl.innerHTML = '';
+    ROUND.questions.forEach((q, i) => {
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'wizard-tab' + (i === activeIndex ? ' active' : '');
+      const dot = document.createElement('span');
+      dot.className = 'tab-dot';
+      dot.style.background = colorFor(i);
+      const label = document.createElement('span');
+      label.className = 'tab-label';
+      label.textContent = q.prompt;
+      const status = document.createElement('span');
+      status.className = 'tab-status';
+      status.textContent = isComplete(i) ? '✓' : `${(answers[q.id] || []).length}/${q.pick_count}`;
+      tab.appendChild(dot);
+      tab.appendChild(label);
+      tab.appendChild(status);
+      tab.addEventListener('click', () => {
+        activeIndex = i;
+        renderTabs();
+        renderQuestion();
+      });
+      tabsEl.appendChild(tab);
+    });
+  }
+
+  function renderGrid() {
+    const q = ROUND.questions[activeIndex];
+    const selected = new Set(answers[q.id] || []);
+    const isFull = selected.size === q.pick_count;
+    grid.querySelectorAll('.contestant-card').forEach((card) => {
+      const id = card.dataset.id;
+      card.style.boxShadow = ringsFor(id);
+      const shouldDisable = isFull && !selected.has(id);
+      card.classList.toggle('disabled', shouldDisable);
+      card.disabled = shouldDisable;
+    });
+  }
+
+  function renderHistoryStrip() {
+    if (!HISTORY.length) {
+      historyStrip.hidden = true;
+      return;
+    }
+    historyStrip.hidden = false;
+    historyStrip.innerHTML = '';
+    HISTORY.forEach((event) => {
+      const card = document.createElement('div');
+      card.className = 'history-card ' + (event.type === 'text' ? 'history-text' : 'history-vote-out');
+
+      if (event.label) {
+        const label = document.createElement('span');
+        label.className = 'history-label';
+        label.textContent = event.label;
+        card.appendChild(label);
+      }
+      if (event.contestants && event.contestants.length) {
+        const avatars = document.createElement('div');
+        avatars.className = 'history-avatars';
+        event.contestants.forEach((c) => {
+          const img = document.createElement('img');
+          img.src = c.image;
+          img.alt = c.name;
+          img.title = c.name;
+          avatars.appendChild(img);
+        });
+        card.appendChild(avatars);
+        const names = document.createElement('span');
+        names.className = 'history-names';
+        names.textContent = event.contestants.map((c) => c.first_name).join(', ');
+        card.appendChild(names);
+      }
+      if (event.episode) {
+        const ep = document.createElement('span');
+        ep.className = 'history-episode';
+        ep.textContent = `Ep ${event.episode}`;
+        card.appendChild(ep);
+      }
+      if (event.note) {
+        const note = document.createElement('span');
+        note.className = 'history-note';
+        note.textContent = event.note;
+        card.appendChild(note);
+      }
+      historyStrip.appendChild(card);
+    });
+  }
+
+  function buildTile(c) {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'contestant-card';
+    card.dataset.id = c.id;
+    const img = document.createElement('img');
+    img.src = c.image;
+    img.alt = c.name;
+    img.title = c.name;
+    const label = document.createElement('span');
+    label.textContent = c.first_name;
+    card.appendChild(img);
+    card.appendChild(label);
+    if (c.tribe_colors && c.tribe_colors.length) {
+      const bar = document.createElement('span');
+      bar.className = 'tribe-bar';
+      c.tribe_colors.forEach((color) => {
+        const seg = document.createElement('span');
+        seg.className = 'tribe-bar-segment';
+        seg.style.background = color;
+        bar.appendChild(seg);
+      });
+      card.appendChild(bar);
+    }
+    return card;
+  }
+
+  function renderQuestion() {
+    const q = ROUND.questions[activeIndex];
+    hintEl.textContent = `Pick exactly ${q.pick_count}.`;
+
+    grid.innerHTML = '';
+    CONTESTANTS.forEach((c) => {
+      const card = buildTile(c);
+      card.addEventListener('click', () => toggle(c.id));
+      grid.appendChild(card);
+    });
+
+    renderGrid();
+    updateLockButton();
+    updateNextButton();
+  }
+
+  function nextIncompleteIndex(from) {
+    const n = ROUND.questions.length;
+    for (let step = 1; step <= n; step++) {
+      const i = (from + step) % n;
+      if (!isComplete(i)) return i;
+    }
+    return -1;
+  }
+
+  function toggle(id) {
+    const q = ROUND.questions[activeIndex];
+    const current = answers[q.id];
+    const idx = current.indexOf(id);
+    if (idx >= 0) {
+      current.splice(idx, 1);
+    } else if (current.length < q.pick_count) {
+      current.push(id);
+    } else if (q.pick_count === 1) {
+      current[0] = id;
+    }
+    renderGrid();
+    renderTabs();
+    updateLockButton();
+    updateNextButton();
+  }
+
+  function updateLockButton() {
+    lockBtn.disabled = !allComplete();
+  }
+
+  function updateNextButton() {
+    const next = isComplete(activeIndex) ? nextIncompleteIndex(activeIndex) : -1;
+    nextBtn.hidden = next === -1;
+    nextBtn.dataset.next = next;
+  }
+
+  nextBtn.addEventListener('click', () => {
+    const next = Number(nextBtn.dataset.next);
+    if (Number.isInteger(next) && next >= 0) {
+      activeIndex = next;
+      renderTabs();
+      renderQuestion();
+    }
+  });
+
+  lockBtn.addEventListener('click', finish);
+
+  function finish() {
+    if (!allComplete()) return;
+    if (!confirm(`Lock in ${player}'s picks? No takebacks after this.`)) return;
+    stepQuestions.hidden = true;
+
+    if (MODE === 'demo') {
+      doneTitle.textContent = "That's the whole flow!";
+      doneSubtitle.textContent = 'In the real thing, this would now be locked in and saved.';
+      stepDone.hidden = false;
+      return;
+    }
+
+    lockBtn.disabled = true;
+    const body = new URLSearchParams();
+    body.set('player', player);
+    for (const [qid, picks] of Object.entries(answers)) {
+      picks.forEach((p) => body.append(`answer__${qid}`, p));
+    }
+
+    fetch(SUBMIT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('submit failed');
+        lockedSet.add(player);
+        doneTitle.textContent = `${player} is locked in!`;
+        doneSubtitle.textContent = 'No takebacks.';
+        stepDone.hidden = false;
+        if (MODE === 'kiosk') {
+          doneHint.hidden = false;
+          doneTimer = setTimeout(resetState, 6000);
+        }
+      })
+      .catch(() => {
+        alert("Something went wrong locking that in — check with whoever's running the laptop.");
+        stepQuestions.hidden = false;
+        lockBtn.disabled = false;
+      });
+  }
+
+  if (MODE === 'kiosk') {
+    stepDone.classList.add('tap-continue');
+  }
+
+  stepDone.addEventListener('click', () => {
+    if (MODE === 'kiosk' && !stepDone.hidden) {
+      resetState();
+    }
+  });
+
+  if (demoRestartBtn) {
+    demoRestartBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      resetState();
+    });
+  }
+
+  renderHistoryStrip();
+  resetState();
+})();
+</script>

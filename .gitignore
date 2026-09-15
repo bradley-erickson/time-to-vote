@@ -1,0 +1,15 @@
+# Locked-in votes — never commit your group's picks
+data/*.json
+
+# Real player names — commit config/players.example.json instead
+config/players.json
+
+# Elimination order is a live spoiler — commit config/history.example.json instead
+config/history.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
