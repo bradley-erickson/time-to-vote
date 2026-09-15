@@ -3,7 +3,11 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      # Host-side 8001, not 8000 — hallmanac's compose file already claims
+      # 8000 on the Pi, and two containers can't bind the same host port.
+      # Only the left side changes; the app inside the container still
+      # listens on 8000, matching main.py/the Dockerfile's CMD untouched.
+      - "8001:8000"
     volumes:
       # Bind mounts, not named volumes — these directories already exist
       # with real content on the host (contestants.json, the *.example.json
