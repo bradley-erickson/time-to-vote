@@ -7,34 +7,40 @@
       {
         "id": "most_hated",
         "prompt": "Most hated",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "emoji-angry-fill"
       },
       {
         "id": "hottest",
         "prompt": "Hottest",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "fire"
       },
       {
         "id": "first_boot",
         "prompt": "First boot",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "door-open-fill"
       },
       {
         "id": "first_breakdown",
         "prompt": "Breakdown",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "emoji-frown-fill"
       },
       {
         "id": "quits",
         "prompt": "Quits",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "flag-fill"
       },
       {
         "id": "shot_in_the_dark",
         "prompt": "Shot in the Dark",
         "pick_count": 1,
         "color": "#e63946",
-        "hint": "Blind Sole Survivor guess."
+        "hint": "Blind Sole Survivor guess.",
+        "icon": "award-fill"
       }
     ]
   },
@@ -46,12 +52,14 @@
       {
         "id": "villains",
         "prompt": "Villains",
-        "pick_count": "any"
+        "pick_count": "any",
+        "icon": "incognito"
       },
       {
         "id": "dead_weight",
         "prompt": "Dead weight",
-        "pick_count": "any"
+        "pick_count": "any",
+        "icon": "hand-thumbs-down-fill"
       },
       {
         "id": "butcher",
@@ -60,22 +68,26 @@
         "slots": [
           "Puzzle",
           "Physical"
-        ]
+        ],
+        "icon": "ph-knife-fill"
       },
       {
         "id": "challenge_beast",
         "prompt": "Challenge beast",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "trophy-fill"
       },
       {
         "id": "idol",
         "prompt": "Finds idol",
-        "pick_count": 2
+        "pick_count": 2,
+        "icon": "gem"
       },
       {
         "id": "episode_titles",
         "prompt": "Episode titles",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "tv-fill"
       },
       {
         "id": "blindside",
@@ -84,23 +96,27 @@
         "slots": [
           "Victim",
           "Mastermind"
-        ]
+        ],
+        "icon": "eye-slash-fill"
       },
       {
         "id": "votes_against",
         "prompt": "Votes against",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "person-x-fill"
       },
       {
         "id": "final_three",
         "prompt": "Final 3",
-        "pick_count": 3
+        "pick_count": 3,
+        "icon": "3-circle-fill"
       },
       {
         "id": "winner",
         "prompt": "Sole Survivor",
         "pick_count": 1,
-        "color": "#e63946"
+        "color": "#e63946",
+        "icon": "award-fill"
       }
     ]
   },
@@ -112,39 +128,46 @@
       {
         "id": "idol_wasted",
         "prompt": "Idol wasted",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "trash-fill"
       },
       {
         "id": "first_jury",
         "prompt": "First juror",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "hammer"
       },
       {
         "id": "flips",
         "prompt": "Flips",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "shuffle"
       },
       {
         "id": "goat",
         "prompt": "Goat",
         "pick_count": 1,
-        "hint": "Final 3, fewest jury votes."
+        "hint": "Final 3, fewest jury votes.",
+        "icon": "ph-target-fill"
       },
       {
         "id": "votes_against",
         "prompt": "Votes against",
-        "pick_count": 1
+        "pick_count": 1,
+        "icon": "person-x-fill"
       },
       {
         "id": "final_three",
         "prompt": "Final 3",
-        "pick_count": 3
+        "pick_count": 3,
+        "icon": "3-circle-fill"
       },
       {
         "id": "winner",
         "prompt": "Sole Survivor",
         "pick_count": 1,
-        "color": "#e63946"
+        "color": "#e63946",
+        "icon": "award-fill"
       }
     ]
   }

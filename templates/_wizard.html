@@ -48,6 +48,7 @@
   </div>
 </div>
 
+<script src="/static/icons.js"></script>
 <script>
 (function () {
   const ROUND = {{ round | to_json | safe }};
@@ -55,7 +56,9 @@
   const HISTORY = {{ history | to_json | safe }};
   const PLAYERS = {{ players | to_json | safe }};
   const INITIAL_LOCKED = {{ locked_players | to_json | safe }};
-  const PALETTE = ['#d9a441', '#4caf6c', '#5fa8d3', '#c77dff', '#ff8fa3', '#ffb347'];
+  // Each question gets its own color; the longest round has 10 questions.
+  const PALETTE = ['#f2c14e', '#4caf6c', '#3a86ff', '#c77dff', '#ff5d8f', '#ff8c42',
+                   '#2ec4b6', '#b8e04a', '#f5f5f5', '#a0673c', '#7bdff2', '#9aa0ff'];
 
   const wizard = document.getElementById('wizard');
   const MODE = wizard.dataset.mode;
@@ -167,6 +170,11 @@
     return ROUND.questions.every((_, i) => isComplete(i));
   }
 
+  function iconFor(index) {
+    const [viewBox, body] = window.ICONS[ROUND.questions[index].icon] || window.ICONS['person-fill'];
+    return `<svg viewBox="${viewBox}" fill="currentColor" aria-hidden="true">${body}</svg>`;
+  }
+
   function colorFor(index) {
     const q = ROUND.questions[index];
     return q.color || PALETTE[index % PALETTE.length];
@@ -193,6 +201,7 @@
       const dot = document.createElement('span');
       dot.className = 'tab-dot';
       dot.style.background = colorFor(i);
+      dot.innerHTML = iconFor(i);
       const label = document.createElement('span');
       label.className = 'tab-label';
       label.textContent = q.prompt;
@@ -221,11 +230,26 @@
     grid.querySelectorAll('.contestant-card').forEach((card) => {
       const id = card.dataset.id;
       card.style.boxShadow = ringsFor(id);
+      let marks = card.querySelector('.pick-marks');
+      if (!marks) {
+        marks = document.createElement('div');
+        marks.className = 'pick-marks';
+        card.appendChild(marks);
+      }
+      marks.innerHTML = '';
+      ROUND.questions.forEach((other, i) => {
+        if (!(answers[other.id] || []).includes(id)) return;
+        const mark = document.createElement('div');
+        mark.className = 'pick-mark' + (i === activeIndex ? ' active' : '');
+        mark.style.background = colorFor(i);
+        mark.innerHTML = iconFor(i);
+        marks.appendChild(mark);
+      });
       const slot = q.slots ? (answers[q.id] || []).indexOf(id) : -1;
       let badge = card.querySelector('.slot-badge');
       if (slot >= 0 && q.slots[slot]) {
         if (!badge) {
-          badge = document.createElement('span');
+          badge = document.createElement('div');
           badge.className = 'slot-badge';
           card.appendChild(badge);
         }
@@ -317,7 +341,7 @@
 
   function renderQuestion() {
     const q = ROUND.questions[activeIndex];
-    hintEl.textContent = q.pick_count === 'any' ? 'Pick as many as you want.' : `Pick exactly ${q.pick_count}.`;
+    hintEl.textContent = q.pick_count === 'any' ? 'Pick as many as you want.' : `Pick ${q.pick_count}.`;
     hintEl.classList.toggle('pick-hint-any', q.pick_count === 'any');
     if (q.slots) hintEl.textContent += ` In order: ${q.slots.join(', then ')}.`;
     if (q.hint) hintEl.textContent += ` ${q.hint}`;
@@ -361,7 +385,9 @@
   }
 
   function updateLockButton() {
-    lockBtn.disabled = !allComplete();
+    const left = ROUND.questions.filter((_, i) => !isComplete(i)).length;
+    lockBtn.disabled = left > 0;
+    lockBtn.textContent = left > 0 ? `Lock In · ${left} left` : 'Lock In';
   }
 
   function updateNextButton() {

@@ -137,7 +137,7 @@ def get_jury_round():
     else:
         status = f"{len(active)} still in it — opens once we're down to the final 3."
     questions = [
-        {"id": j["id"], "prompt": f"Who did {j['first_name']} vote for?", "pick_count": 1}
+        {"id": j["id"], "prompt": f"Who did {j['first_name']} vote for?", "pick_count": 1, "icon": "person-fill"}
         for j in get_jury_contestants()
     ]
     return {
