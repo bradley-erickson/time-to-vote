@@ -748,3 +748,27 @@ input[type="color"] {
 }
 
 .admin-tribe-row input[type="text"] { flex: 1; }
+
+.slot-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.pick-hint.pick-hint-any {
+  color: var(--text, #fff);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+/* Keep Next's space reserved while hidden so the header doesn't shift when it appears */
+#next-btn[hidden] {
+  display: inline-block;
+  visibility: hidden;
+}

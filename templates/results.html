@@ -45,7 +45,7 @@
             <img src="{{ c.image }}" alt="{{ c.name }}" title="{{ c.name }}">
             {% endfor %}
           </div>
-          <span class="pick-names">{{ answer.picks | map(attribute="first_name") | join(", ") }}</span>
+          <span class="pick-names">{% set slots = r.questions[loop.index0].slots %}{% if slots %}{% for c in answer.picks %}{{ slots[loop.index0] }}: {{ c.first_name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ answer.picks | map(attribute="first_name") | join(", ") }}{% endif %}</span>
         </td>
         {% endfor %}
         <td>{{ row.locked_at }}</td>

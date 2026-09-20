@@ -159,7 +159,8 @@
 
   function isComplete(index) {
     const q = ROUND.questions[index];
-    return (answers[q.id] || []).length === q.pick_count;
+    const count = (answers[q.id] || []).length;
+    return q.pick_count === 'any' ? count >= 1 : count === q.pick_count;
   }
 
   function allComplete() {
@@ -197,7 +198,10 @@
       label.textContent = q.prompt;
       const status = document.createElement('span');
       status.className = 'tab-status';
-      status.textContent = isComplete(i) ? '✓' : `${(answers[q.id] || []).length}/${q.pick_count}`;
+      const count = (answers[q.id] || []).length;
+      status.textContent = isComplete(i)
+        ? '✓'
+        : (q.pick_count === 'any' ? `${count} picked` : `${count}/${q.pick_count}`);
       tab.appendChild(dot);
       tab.appendChild(label);
       tab.appendChild(status);
@@ -213,10 +217,22 @@
   function renderGrid() {
     const q = ROUND.questions[activeIndex];
     const selected = new Set(answers[q.id] || []);
-    const isFull = selected.size === q.pick_count;
+    const isFull = q.pick_count !== 'any' && selected.size === q.pick_count;
     grid.querySelectorAll('.contestant-card').forEach((card) => {
       const id = card.dataset.id;
       card.style.boxShadow = ringsFor(id);
+      const slot = q.slots ? (answers[q.id] || []).indexOf(id) : -1;
+      let badge = card.querySelector('.slot-badge');
+      if (slot >= 0 && q.slots[slot]) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'slot-badge';
+          card.appendChild(badge);
+        }
+        badge.textContent = q.slots[slot];
+      } else if (badge) {
+        badge.remove();
+      }
       const shouldDisable = isFull && !selected.has(id);
       card.classList.toggle('disabled', shouldDisable);
       card.disabled = shouldDisable;
@@ -301,7 +317,10 @@
 
   function renderQuestion() {
     const q = ROUND.questions[activeIndex];
-    hintEl.textContent = `Pick exactly ${q.pick_count}.`;
+    hintEl.textContent = q.pick_count === 'any' ? 'Pick as many as you want.' : `Pick exactly ${q.pick_count}.`;
+    hintEl.classList.toggle('pick-hint-any', q.pick_count === 'any');
+    if (q.slots) hintEl.textContent += ` In order: ${q.slots.join(', then ')}.`;
+    if (q.hint) hintEl.textContent += ` ${q.hint}`;
 
     grid.innerHTML = '';
     CONTESTANTS.forEach((c) => {
@@ -330,7 +349,7 @@
     const idx = current.indexOf(id);
     if (idx >= 0) {
       current.splice(idx, 1);
-    } else if (current.length < q.pick_count) {
+    } else if (q.pick_count === 'any' || current.length < q.pick_count) {
       current.push(id);
     } else if (q.pick_count === 1) {
       current[0] = id;

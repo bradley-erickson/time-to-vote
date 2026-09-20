@@ -1,23 +1,66 @@
 [
   {
-    "id": "start",
-    "title": "Season Start",
-    "subtitle": "Fill this out once, before the season premieres.",
+    "id": "pre_premiere",
+    "title": "Pre-Premiere",
+    "subtitle": "Blind picks \u2014 fill this out before the season premieres.",
     "questions": [
       {
-        "id": "final_three",
-        "prompt": "Final 3",
-        "pick_count": 3
+        "id": "most_hated",
+        "prompt": "Most hated",
+        "pick_count": 1
       },
       {
-        "id": "idol",
-        "prompt": "Finds hidden immunity idol",
+        "id": "hottest",
+        "prompt": "Hottest",
         "pick_count": 1
+      },
+      {
+        "id": "first_boot",
+        "prompt": "First boot",
+        "pick_count": 1
+      },
+      {
+        "id": "first_breakdown",
+        "prompt": "Breakdown",
+        "pick_count": 1
+      },
+      {
+        "id": "quits",
+        "prompt": "Quits",
+        "pick_count": 1
+      },
+      {
+        "id": "shot_in_the_dark",
+        "prompt": "Shot in the Dark",
+        "pick_count": 1,
+        "color": "#e63946",
+        "hint": "Blind Sole Survivor guess."
+      }
+    ]
+  },
+  {
+    "id": "post_premiere",
+    "title": "After Episode 1",
+    "subtitle": "Fill this out once, after watching the premiere.",
+    "questions": [
+      {
+        "id": "villains",
+        "prompt": "Villains",
+        "pick_count": "any"
+      },
+      {
+        "id": "dead_weight",
+        "prompt": "Dead weight",
+        "pick_count": "any"
       },
       {
         "id": "butcher",
-        "prompt": "Butchers challenge",
-        "pick_count": 1
+        "prompt": "Butcher",
+        "pick_count": 2,
+        "slots": [
+          "Puzzle",
+          "Physical"
+        ]
       },
       {
         "id": "challenge_beast",
@@ -25,9 +68,33 @@
         "pick_count": 1
       },
       {
-        "id": "votes_against",
-        "prompt": "Most votes against",
+        "id": "idol",
+        "prompt": "Finds idol",
+        "pick_count": 2
+      },
+      {
+        "id": "episode_titles",
+        "prompt": "Episode titles",
         "pick_count": 1
+      },
+      {
+        "id": "blindside",
+        "prompt": "Blindside",
+        "pick_count": 2,
+        "slots": [
+          "Victim",
+          "Mastermind"
+        ]
+      },
+      {
+        "id": "votes_against",
+        "prompt": "Votes against",
+        "pick_count": 1
+      },
+      {
+        "id": "final_three",
+        "prompt": "Final 3",
+        "pick_count": 3
       },
       {
         "id": "winner",
@@ -43,14 +110,35 @@
     "subtitle": "Fill this out once, right after the merge episode airs.",
     "questions": [
       {
-        "id": "final_three",
-        "prompt": "Final 3",
-        "pick_count": 3
+        "id": "idol_wasted",
+        "prompt": "Idol wasted",
+        "pick_count": 1
+      },
+      {
+        "id": "first_jury",
+        "prompt": "First juror",
+        "pick_count": 1
+      },
+      {
+        "id": "flips",
+        "prompt": "Flips",
+        "pick_count": 1
+      },
+      {
+        "id": "goat",
+        "prompt": "Goat",
+        "pick_count": 1,
+        "hint": "Final 3, fewest jury votes."
       },
       {
         "id": "votes_against",
-        "prompt": "Most votes against",
+        "prompt": "Votes against",
         "pick_count": 1
+      },
+      {
+        "id": "final_three",
+        "prompt": "Final 3",
+        "pick_count": 3
       },
       {
         "id": "winner",

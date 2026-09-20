@@ -52,13 +52,26 @@ def slugify(text: str) -> str:
 
 
 def get_contestants():
+    """Contestants grouped by current tribe (the tribes.json order), then
+    by original tribe within that group, then by name — so swaps cluster
+    people with their new tribemates while keeping old allies together."""
     tribes = get_tribes_by_id()
+    tribe_order = {tid: i for i, tid in enumerate(tribes)}
+    no_tribe = len(tribe_order)
     contestants = load_config("contestants.json")
     for c in contestants:
         assigned = [tribes[t] for t in c.get("tribes", []) if t in tribes]
         c["tribe_colors"] = [t["color"] for t in assigned]
         c["tribe_names"] = [t["name"] for t in assigned]
         c["first_name"] = c["name"].split(" ", 1)[0]
+
+    def sort_key(c):
+        tribe_ids = [t for t in c.get("tribes", []) if t in tribe_order]
+        current = tribe_order[tribe_ids[-1]] if tribe_ids else no_tribe
+        original = tribe_order[tribe_ids[0]] if tribe_ids else no_tribe
+        return (current, original, c["name"])
+
+    contestants.sort(key=sort_key)
     return contestants
 
 
@@ -267,7 +280,11 @@ async def submit_round(request: Request, round_id: str):
     else:
         for question in round_["questions"]:
             picks = form.getlist(f"answer__{question['id']}")
-            if len(picks) != question["pick_count"]:
+            if question["pick_count"] == "any":
+                if not picks:
+                    error = f"\"{question['prompt']}\" needs at least 1 pick."
+                    break
+            elif len(picks) != question["pick_count"]:
                 error = f"\"{question['prompt']}\" needs exactly {question['pick_count']} pick(s)."
                 break
             answers[question["id"]] = picks

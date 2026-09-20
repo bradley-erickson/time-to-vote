@@ -27,10 +27,10 @@ each have a "← Home" link back to it.
 - **`/round/<round_id>`** — the same wizard without the kiosk wrapper, for
   voting from your own phone/laptop instead of the shared screen.
 
-You'll do this at three points: once with the `start` round before the
-season premieres, once with the `merge` round after the merge episode
-airs, and once with `jury` — a special round that isn't in `rounds.json`
-at all. It's built on the fly, one pick-1 question per jury member ("Who
+You'll do this at several points across the season — see **Voting
+categories** below for the full planned breakdown — plus once with
+`jury`, a special round that isn't in `rounds.json` at all. It's built
+on the fly, one pick-1 question per jury member ("Who
 did *Lewis* vote for?"), voting only among whoever's currently the final
 3 (however many are still active once eliminations bring the cast down to
 exactly 3) — so it automatically has no questions and stays gated behind a
@@ -39,6 +39,47 @@ a jury member when you record their vote-out in Settings (see below). The
 home page shows how many are still in it and when it'll open; there's also
 a testing override in Settings → History that opens it early with whoever's
 currently active, for trying it out before the season's actually there.
+
+## Voting categories
+
+Live in `config/rounds.json`. Four rounds, each listed in the order it
+should appear on screen (the marquee pick always last). "Any" questions
+take as many picks as you like (at least 1); pick-2 questions with
+**slots** label each pick in the order it was tapped:
+
+**Pre-premiere** — blind, cast photos/bios only:
+1. Most hated
+2. Hottest contestant
+3. First boot
+4. First breakdown
+5. Gives up / quits
+6. Shot in the Dark — blind Sole Survivor guess
+
+**Post-episode-1** — after watching the premiere; the marathon round:
+1. Villains — any number
+2. Dead weight / dragged along — any number
+3. Butchers challenge — pick 2, slots: Puzzle, Physical
+4. Challenge beast
+5. Finds idol — pick 2 (plain)
+6. Most episode titles
+7. Blindside — pick 2, slots: Victim, Mastermind
+8. Most votes against
+9. Final Three — pick 3
+10. Sole Survivor
+
+**Merge** — re-picks plus merge-only categories; same votes-against →
+final-three → Sole-Survivor order as post-episode-1, kept consistent
+across every round that re-asks them:
+1. Idol found and wasted
+2. First jury member
+3. Flips allegiance
+4. Goat — final 3, fewest jury votes
+5. Most votes against (re-pick)
+6. Final Three (re-pick, pick 3)
+7. Sole Survivor (re-pick)
+
+**Jury** — unchanged: auto-built at final 3, one pick-1 question per jury
+member.
 
 ## Run it
 
@@ -104,12 +145,13 @@ instead of port-forwarding.
 
 ## Configure
 
-- `config/rounds.json` — the `start` and `merge` rounds (the `jury` round
+- `config/rounds.json` — the `pre_premiere`, `post_premiere`, and `merge` rounds (the `jury` round
   isn't here — see above). Each bundles several questions into one form
   that's filled out and locked in all at once. Add, remove, or reword
   questions here; the app builds the pages from this list. `pick_count`
-  controls whether a question is checkboxes (pick N) or radio buttons
-  (pick 1). A question can also set `"color": "#hex"` to give it a fixed
+  is a number (pick exactly N) or `"any"` (at least 1, no cap). A
+  question can also set `"slots": ["Puzzle", "Physical"]` to label each
+  pick by the order it was chosen. A question can also set `"color": "#hex"` to give it a fixed
   ring/tab color instead of the next one in the rotation — used for "Sole
   Survivor" (red, since they're on fire).
 - `config/contestants.json` — the cast: id, name, `image` (a path under
