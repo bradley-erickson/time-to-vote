@@ -258,6 +258,28 @@ def kiosk(request: Request, round_id: str):
     )
 
 
+def log_voting_session(round_id: str, title: str):
+    """Once every player has locked in, mark the voting session on the timeline (once)."""
+    players = get_players()
+    if not players or not set(players) <= set(utils.load_submissions(round_id)):
+        return
+    history = get_history()
+    if any(e.get("round_id") == round_id for e in history):
+        return
+    history.append(
+        {
+            "id": uuid.uuid4().hex[:8],
+            "type": "text",
+            "contestants": [],
+            "label": f"Voting: {title}",
+            "note": None,
+            "episode": None,
+            "round_id": round_id,
+        }
+    )
+    save_config("history.json", history)
+
+
 @app.post("/round/{round_id}")
 async def submit_round(request: Request, round_id: str):
     round_ = resolve_round(round_id)
@@ -293,6 +315,7 @@ async def submit_round(request: Request, round_id: str):
         return JSONResponse({"error": error}, status_code=400)
 
     record = utils.save_submission(round_id, player, answers)
+    log_voting_session(round_id, round_["title"])
     return JSONResponse({"ok": True, "player": player, "locked_at": record["locked_at"]})
 
 
@@ -329,6 +352,23 @@ def results(request: Request):
     )
 
 
+# Voting questions that are abstract or already covered by vote-outs, not loggable events.
+NON_EVENT_QUESTIONS = {
+    "most_hated", "hottest", "first_boot", "shot_in_the_dark", "villains", "dead_weight",
+    "challenge_beast", "episode_titles", "votes_against", "final_three", "winner", "first_jury",
+}
+
+
+def get_event_labels():
+    """Prompts of the voting questions, so history events match what we predict."""
+    labels = []
+    for r in get_rounds():
+        for q in r["questions"]:
+            if q["id"] not in NON_EVENT_QUESTIONS and q["prompt"] not in labels:
+                labels.append(q["prompt"])
+    return labels
+
+
 @app.get("/admin")
 def admin_page(request: Request):
     active_tab = request.query_params.get("tab", "history")
@@ -342,6 +382,7 @@ def admin_page(request: Request):
             "contestants": get_contestants(),
             "tribes": get_tribes(),
             "active_contestants": get_active_contestants(),
+            "event_labels": get_event_labels(),
             "history": resolve_history(),
             "players": get_players(),
             "jury_override": get_settings().get("jury_override", False),
@@ -374,7 +415,9 @@ async def admin_add_history(request: Request):
                 }
             )
     else:
-        label = (form.get("label") or "").strip()
+        label = (form.get("label_choice") or "").strip()
+        if label == "__other__":
+            label = (form.get("label_custom") or "").strip()
         contestants = form.getlist("contestants")
         if label:
             history.append(

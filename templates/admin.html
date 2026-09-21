@@ -65,14 +65,26 @@
       <h3>Add an event</h3>
       <input type="hidden" name="type" value="text">
       <p class="pick-hint">A challenge win, a tribe swap, an idol find — anything worth marking.</p>
-      <input type="text" name="label" placeholder="Label" list="event-labels" required>
-      <datalist id="event-labels">
-        <option value="Challenge Win">
-        <option value="Idol Found">
-        <option value="Advantage Found">
-        <option value="Tribe Swap">
-        <option value="Merge">
-      </datalist>
+      <select id="ev-label-select" name="label_choice" required>
+        <option value="" disabled selected>Choose an event…</option>
+        {% for label in event_labels %}
+        <option value="{{ label }}">{{ label }}</option>
+        {% endfor %}
+        <option value="__other__">Other…</option>
+      </select>
+      <input type="text" id="ev-label-custom" name="label_custom" placeholder="Custom label" hidden>
+      <script>
+        (function () {
+          const sel = document.getElementById('ev-label-select');
+          const custom = document.getElementById('ev-label-custom');
+          sel.addEventListener('change', () => {
+            const other = sel.value === '__other__';
+            custom.hidden = !other;
+            custom.required = other;
+            if (other) custom.focus();
+          });
+        })();
+      </script>
       <label class="pick-hint">Contestant(s) — optional, check more than one for a team win</label>
       <div class="admin-checkbox-list">
         {% for c in active_contestants %}
