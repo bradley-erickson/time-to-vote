@@ -5,7 +5,140 @@
 {% block content %}
 <a class="back-link" href="/">&larr; Home</a>
 <h1>Results</h1>
-<p class="subtitle">Every locked-in submission, with its integrity check.</p>
+<p class="subtitle">Who picked who, and how those picks moved over time.</p>
+
+{% macro pick_chip(p) %}
+<span class="pick-chip">
+  <img src="{{ p.c.image or '/static/images/placeholder.svg' }}" alt="{{ p.c.name }}">
+  <span>{% if p.slot_icon %}<span class="mark-icon" data-icon="{{ p.slot_icon }}" title="{{ p.slot }}"></span>{% endif %}{{ p.c.first_name }}</span>
+</span>
+{% endmacro %}
+
+{% macro marks(list) %}{% for m in list %}{% if m.icon %}<span class="mark-icon" data-icon="{{ m.icon }}" title="{{ m.label }}"></span>{% else %}<span class="mark-dot" style="background: {{ m.color }}" title="{{ m.label }}"></span>{% endif %}{% endfor %}{% endmacro %}
+
+<div class="initials-legend">
+  {% for name, initial in initials.items() %}<span><span class="player-pill">{{ initial }}</span> {{ name }}</span>{% endfor %}
+  <span class="legend-sep"></span>
+  {% for st in legend.stages %}<span><span class="mark-dot" style="background: {{ st.color }}"></span> {{ st.label }}</span>{% endfor %}
+  <span class="legend-sep"></span>
+  {% for sl in legend.slots %}<span><span class="mark-icon" data-icon="{{ sl.icon }}"></span> {{ sl.label }}</span>{% endfor %}
+</div>
+
+<div class="view-toggle" role="tablist">
+  <button type="button" class="view-tab active" data-view="question">By question</button>
+  <button type="button" class="view-tab" data-view="player">By player</button>
+  <button type="button" class="view-tab" data-view="contestant">By contestant</button>
+</div>
+
+<div class="view" data-view="question">
+<div class="series-grid">
+  {% for s in series %}
+  <section class="series-card">
+    <h2 class="series-title">
+      <span class="series-icon" data-icon="{{ s.icon or 'person-fill' }}"{% if s.color %} style="color: {{ s.color }}"{% endif %}></span>
+      {{ s.prompt }}
+    </h2>
+    {% for g in s.groups %}
+    <div class="pick-group">
+      <img class="pick-avatar" src="{{ g.c.image or '/static/images/placeholder.svg' }}" alt="{{ g.c.name }}" title="{{ g.c.name }}">
+      <div class="pick-who">
+        <span class="pick-name">{{ g.c.first_name }}</span>
+        {% if g.c.tribe_colors %}
+        <span class="tribe-bar">{% for color in g.c.tribe_colors %}<span class="tribe-bar-segment" style="background: {{ color }};"></span>{% endfor %}</span>
+        {% endif %}
+      </div>
+      <div class="pick-players">
+        {% for b in g.badges %}
+        <span class="player-pill" title="{{ b.player }}">{{ initials[b.player] }}{{ marks(b.marks) }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <p class="empty">No picks yet.</p>
+    {% endfor %}
+  </section>
+  {% endfor %}
+</div>
+</div>
+
+<div class="view" data-view="player" hidden>
+<div class="table-scroll">
+<table class="matrix">
+  <thead>
+    <tr>
+      <th class="sticky-col">Question</th>
+      {% for p in player_view.players %}<th>{{ p }}</th>{% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in player_view.rows %}
+    <tr>
+      <th class="sticky-col row-label">
+        <span class="series-icon" data-icon="{{ row.icon or 'person-fill' }}"{% if row.color %} style="color: {{ row.color }}"{% endif %}></span>{{ row.prompt }}
+      </th>
+      {% for steps in row.cells %}
+      <td>
+        {% if steps %}
+        <div class="player-steps">
+          {% for step in steps %}
+          <span class="player-step">
+            {% if not loop.first %}<span class="arrow">&rarr;</span>{% endif %}
+            {% if row.multi_stage %}<span class="mark-dot" style="background: {{ step.color }}" title="{{ step.stage }}"></span>{% endif %}
+            {% for p in step.picks %}{{ pick_chip(p) }}{% endfor %}
+          </span>
+          {% endfor %}
+        </div>
+        {% else %}<span class="pick-none">&mdash;</span>{% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+</div>
+
+<div class="view" data-view="contestant" hidden>
+<div class="table-scroll">
+<table class="matrix matrix-contestants">
+  <thead>
+    <tr>
+      <th class="sticky-col">Contestant</th>
+      {% for col in contestant_view.columns %}
+      <th class="col-label" title="{{ col.prompt }}">
+        <span class="series-icon" data-icon="{{ col.icon or 'person-fill' }}"{% if col.color %} style="color: {{ col.color }}"{% endif %}></span>
+        <span>{{ col.prompt }}</span>
+      </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in contestant_view.rows %}
+    <tr{% if not row.total %} class="no-votes"{% endif %}>
+      <th class="sticky-col">
+        <span class="contestant-cell">
+          <img class="pick-avatar" src="{{ row.c.image or '/static/images/placeholder.svg' }}" alt="{{ row.c.name }}">
+          <span class="pick-who">
+            <span class="pick-name">{{ row.c.first_name }}</span>
+            {% if row.c.tribe_colors %}<span class="tribe-bar">{% for color in row.c.tribe_colors %}<span class="tribe-bar-segment" style="background: {{ color }};"></span>{% endfor %}</span>{% endif %}
+          </span>
+        </span>
+      </th>
+      {% for badges in row.cells %}
+      <td>
+        <div class="pick-players">
+          {% for b in badges %}
+          <span class="player-pill" title="{{ b.player }}">{{ initials[b.player] }}{{ marks(b.marks) }}</span>
+          {% endfor %}
+        </div>
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+</div>
 
 {% if history %}
 <section class="results-section">
@@ -18,52 +151,49 @@
 </section>
 {% endif %}
 
-{% for r in rounds %}
-<section class="results-section">
-  <h2>{{ r.title }}</h2>
-  {% if data[r.id] %}
-  <div class="table-scroll">
+<details class="integrity">
+  <summary>Integrity checks</summary>
+  {% for r in integrity %}
+  <h3>{{ r.title }}</h3>
+  {% if r.rows %}
   <table>
-    <thead>
-      <tr>
-        <th>Player</th>
-        {% for q in r.questions %}
-        <th>{{ q.prompt }}</th>
-        {% endfor %}
-        <th>Locked at (UTC)</th>
-        <th>Integrity</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Player</th><th>Locked at (UTC)</th><th>Integrity</th></tr></thead>
     <tbody>
-      {% for row in data[r.id] %}
+      {% for row in r.rows %}
       <tr>
         <td>{{ row.player }}</td>
-        {% for answer in row.answers %}
-        <td>
-          <div class="pick-avatars">
-            {% for c in answer.picks %}
-            <img src="{{ c.image }}" alt="{{ c.name }}" title="{{ c.name }}">
-            {% endfor %}
-          </div>
-          <span class="pick-names">{% set slots = r.questions[loop.index0].slots %}{% if slots %}{% for c in answer.picks %}{{ slots[loop.index0] }}: {{ c.first_name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{{ answer.picks | map(attribute="first_name") | join(", ") }}{% endif %}</span>
-        </td>
-        {% endfor %}
         <td>{{ row.locked_at }}</td>
-        <td>
-          {% if row.verified %}
-            <span class="badge badge-ok">verified</span>
-          {% else %}
-            <span class="badge badge-bad">hash mismatch</span>
-          {% endif %}
-        </td>
+        <td>{% if row.verified %}<span class="badge badge-ok">verified</span>{% else %}<span class="badge badge-bad">hash mismatch</span>{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
-  </div>
   {% else %}
   <p class="empty">No one has locked in yet.</p>
   {% endif %}
-</section>
-{% endfor %}
+  {% endfor %}
+</details>
+
+<script src="{{ static_url('icons.js') }}"></script>
+<script>
+  (function () {
+    const tabs = document.querySelectorAll('.view-tab');
+    const views = document.querySelectorAll('.view');
+    function show(name) {
+      tabs.forEach((t) => t.classList.toggle('active', t.dataset.view === name));
+      views.forEach((v) => { v.hidden = v.dataset.view !== name; });
+      try { localStorage.setItem('results-view', name); } catch (e) {}
+    }
+    tabs.forEach((t) => t.addEventListener('click', () => show(t.dataset.view)));
+    let saved = location.hash.slice(1) || null;
+    try { saved = saved || localStorage.getItem('results-view'); } catch (e) {}
+    if (saved && document.querySelector(`.view[data-view="${saved}"]`)) show(saved);
+  })();
+</script>
+<script>
+  document.querySelectorAll('[data-icon]').forEach((el) => {
+    const [viewBox, body] = window.ICONS[el.dataset.icon] || window.ICONS['person-fill'];
+    el.innerHTML = `<svg viewBox="${viewBox}" width="1.1em" height="1.1em" fill="currentColor">${body}</svg>`;
+  });
+</script>
 {% endblock %}

@@ -19,6 +19,14 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 templates.env.filters["to_json"] = json.dumps
 
 
+def static_url(name: str) -> str:
+    """Static file URL with its mtime, so browsers refetch after an edit instead of using a stale cache."""
+    return f"/static/{name}?v={int((BASE_DIR / 'static' / name).stat().st_mtime)}"
+
+
+templates.env.globals["static_url"] = static_url
+
+
 def load_config(name: str):
     path = CONFIG_DIR / name
     if not path.exists():
@@ -142,6 +150,8 @@ def get_jury_round():
     ]
     return {
         "id": "jury",
+        "short": "Jury",
+        "abbr": "J",
         "title": "Jury Predictions",
         "subtitle": "Fill this out once, after we're down to the final 3.",
         "questions": questions,
@@ -319,36 +329,168 @@ async def submit_round(request: Request, round_id: str):
     return JSONResponse({"ok": True, "player": player, "locked_at": record["locked_at"]})
 
 
+# Questions asked in more than one round are shown as one series; a blind
+# Sole Survivor guess before the premiere is the start of the "winner" series.
+SERIES_ALIASES = {"shot_in_the_dark": "winner"}
+
+
+# One color per round, used for the stage dots that show when a pick was made.
+STAGE_COLORS = ["#5aa9e6", "#ff8c42", "#4caf6c", "#c77dff"]
+
+
+def build_results_series(rounds):
+    """One entry per question across all rounds, grouped by the contestant
+    picked. Each group lists the players who picked them, with marks (a colored
+    stage dot, or a slot icon) so movement over time shows as a player's badge
+    turning up under different contestants."""
+    contestants = {c["id"]: c for c in get_contestants()}
+    submissions = {r["id"]: utils.load_submissions(r["id"]) for r in rounds}
+    series = {}
+    for index, r in enumerate(rounds):
+        stage = r.get("short") or r["title"]
+        color = STAGE_COLORS[index % len(STAGE_COLORS)]
+        for q in r["questions"]:
+            key = SERIES_ALIASES.get(q["id"], q["id"])
+            entry = series.setdefault(
+                key, {"id": key, "prompt": q["prompt"], "icon": q.get("icon"), "color": q.get("color"), "stages": [], "colors": {}, "groups": {}}
+            )
+            entry["prompt"], entry["icon"] = q["prompt"], q.get("icon") or entry["icon"]
+            entry["stages"].append(stage)
+            entry["colors"][stage] = color
+            slots = q.get("slots")
+            slot_icons = q.get("slot_icons") or []
+            for player, record in submissions[r["id"]].items():
+                for i, pid in enumerate(record["answers"].get(q["id"], [])):
+                    group = entry["groups"].setdefault(
+                        pid,
+                        {"c": contestants.get(pid, {"id": pid, "name": pid, "first_name": pid, "image": None}), "entries": []},
+                    )
+                    has_slot = bool(slots) and i < len(slots)
+                    group["entries"].append(
+                        {
+                            "player": player,
+                            "stage": stage,
+                            "slot": slots[i] if has_slot else None,
+                            "slot_icon": slot_icons[i] if has_slot and i < len(slot_icons) else None,
+                        }
+                    )
+    for entry in series.values():
+        entry["multi_stage"] = len(entry["stages"]) > 1
+        for group in entry["groups"].values():
+            # One badge per player; its marks say which rounds (or slots) they picked this person in.
+            badges = {}
+            for e in group["entries"]:
+                if entry["multi_stage"]:
+                    mark = {"label": e["stage"], "color": entry["colors"][e["stage"]], "icon": None}
+                elif e["slot"]:
+                    mark = {"label": e["slot"], "color": None, "icon": e["slot_icon"]}
+                else:
+                    mark = None
+                b = badges.setdefault(e["player"], {"player": e["player"], "marks": []})
+                if mark and mark not in b["marks"]:
+                    b["marks"].append(mark)
+            group["badges"] = list(badges.values())
+        entry["groups"] = sorted(
+            entry["groups"].values(), key=lambda g: (-len(g["badges"]), g["c"]["name"])
+        )
+    return list(series.values())
+
+
+def results_legend(rounds):
+    """Stage colors and slot icons, for the key at the top of the results page."""
+    stages = [
+        {"label": r.get("short") or r["title"], "color": STAGE_COLORS[i % len(STAGE_COLORS)]}
+        for i, r in enumerate(rounds)
+    ]
+    slots = []
+    for r in rounds:
+        for q in r["questions"]:
+            for label, icon in zip(q.get("slots") or [], q.get("slot_icons") or []):
+                if not any(s["label"] == label for s in slots):
+                    slots.append({"label": label, "icon": icon})
+    return {"stages": stages, "slots": slots}
+
+
+def build_player_view(series):
+    """A question-by-player matrix. Each cell holds that player's picks at each
+    stage in order, so a pick that moved over time reads left to right."""
+    players = get_players()
+    rows = []
+    for entry in series:
+        cells = []
+        for player in players:
+            steps = {}
+            for group in entry["groups"]:
+                for e in group["entries"]:
+                    if e["player"] == player:
+                        steps.setdefault(e["stage"], []).append({"c": group["c"], "slot": e["slot"], "slot_icon": e["slot_icon"]})
+            cells.append(
+                [
+                    {"stage": st, "color": entry["colors"][st], "picks": steps[st]}
+                    for st in entry["stages"]
+                    if st in steps
+                ]
+            )
+        rows.append(
+            {
+                "prompt": entry["prompt"],
+                "icon": entry["icon"],
+                "color": entry["color"],
+                "multi_stage": entry["multi_stage"],
+                "cells": cells,
+            }
+        )
+    return {"players": players, "rows": rows}
+
+
+def build_contestant_view(series):
+    """A contestant-by-question matrix: who picked each contestant for each question."""
+    rows = []
+    for c in get_contestants():
+        cells = []
+        for entry in series:
+            badges = next((g["badges"] for g in entry["groups"] if g["c"]["id"] == c["id"]), [])
+            cells.append(badges)
+        rows.append({"c": c, "cells": cells, "total": sum(len(b) for b in cells)})
+    return {"columns": series, "rows": rows}
+
+
+def player_initials():
+    """Single-letter labels for players, growing a letter only where two would collide."""
+    players = get_players()
+    n = 1
+    while len({p[:n].upper() for p in players}) < len(players) and n < 5:
+        n += 1
+    return {p: p[:n].upper() for p in players}
+
+
 @app.get("/results")
 def results(request: Request):
     rounds = get_rounds() + [get_jury_round()]
-    contestants = {c["id"]: c for c in get_contestants()}
-    data = {}
+    integrity = []
     for r in rounds:
-        submissions = utils.load_submissions(r["id"])
-        rows = []
-        for player, record in sorted(submissions.items()):
-            answer_rows = [
-                {
-                    "prompt": q["prompt"],
-                    "picks": [
-                        contestants.get(pid, {"id": pid, "name": pid, "first_name": pid, "image": None})
-                        for pid in record["answers"].get(q["id"], [])
-                    ],
-                }
-                for q in r["questions"]
-            ]
-            rows.append(
-                {
-                    "player": player,
-                    "answers": answer_rows,
-                    "locked_at": record["locked_at"],
-                    "verified": utils.verify_submission(r["id"], player, record),
-                }
-            )
-        data[r["id"]] = rows
+        rows = [
+            {
+                "player": player,
+                "locked_at": record["locked_at"],
+                "verified": utils.verify_submission(r["id"], player, record),
+            }
+            for player, record in sorted(utils.load_submissions(r["id"]).items())
+        ]
+        integrity.append({"title": r["title"], "rows": rows})
+    series = build_results_series(rounds)
     return templates.TemplateResponse(
-        request, "results.html", {"rounds": rounds, "data": data, "history": resolve_history()}
+        request,
+        "results.html",
+        {
+            "series": series,
+            "player_view": build_player_view(series),
+            "contestant_view": build_contestant_view(series),
+            "initials": player_initials(),
+            "legend": results_legend(get_rounds()),
+            "integrity": integrity,
+            "history": resolve_history(),
+        },
     )
 
 

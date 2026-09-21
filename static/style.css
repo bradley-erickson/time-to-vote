@@ -806,3 +806,180 @@ input[type="color"] {
 .pick-mark svg { width: 0.9rem; height: 0.9rem; display: block; }
 
 .wizard-lock-btn#lock-btn { min-width: 11rem; }
+
+/* Results: one card per question, picks grouped by contestant with player pills.
+   Cards flow into columns so there is no dead space between them. */
+.series-grid {
+  column-width: 300px;
+  column-gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.series-card {
+  break-inside: avoid;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  margin-bottom: 0.75rem;
+}
+
+.series-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.series-icon { display: inline-flex; }
+
+.pick-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.pick-avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #223528;
+}
+
+.pick-who { flex: 0 0 4.2rem; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pick-name { font-weight: 700; font-size: 0.9rem; line-height: 1; }
+.pick-who .tribe-bar { height: 4px; }
+
+.pick-players { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-left: auto; justify-content: flex-end; }
+
+.player-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--bg);
+  border: 1px solid var(--accent-dim);
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+
+.view[hidden] { display: none; }
+
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.view-tab {
+  appearance: none;
+  background: var(--panel);
+  color: var(--text-dim);
+  border: none;
+  padding: 0.45rem 1.1rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.view-tab.active { background: var(--accent); color: #1a1a1a; }
+
+.arrow { color: var(--accent-dim); font-weight: 700; }
+.player-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.35rem; }
+.player-step { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; }
+
+.initials-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  margin: 0 0 1rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+.legend-sep { width: 1px; background: var(--border); align-self: stretch; }
+.mark-dot { display: inline-block; width: 0.55rem; height: 0.55rem; border-radius: 50%; flex: none; }
+.mark-icon { display: inline-flex; color: var(--accent); vertical-align: middle; }
+.mark-icon svg { width: 1.2em; height: 1.2em; }
+.player-pill .mark-dot, .player-pill .mark-icon { margin-left: 0.25rem; }
+.player-pill .mark-dot + .mark-dot { margin-left: 0.15rem; }
+.pick-chip .mark-icon { margin-right: 0.2rem; }
+.initials-legend > span { display: inline-flex; align-items: center; gap: 0.35rem; }
+
+/* Matrix tables (by player, by contestant) */
+.matrix { min-width: 0; font-size: 0.85rem; }
+.matrix th, .matrix td { padding: 0.3rem 0.5rem; vertical-align: middle; }
+.matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel);
+  color: var(--accent);
+  text-transform: none;
+  font-size: 0.9rem;
+}
+.matrix .sticky-col { position: sticky; left: 0; z-index: 1; background: var(--panel); }
+.matrix thead .sticky-col { z-index: 3; }
+.matrix td { border-left: 1px solid var(--border); }
+.matrix .row-label {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.matrix .row-label .series-icon { margin-right: 0.35rem; vertical-align: middle; }
+.matrix tr.no-votes { opacity: 0.4; }
+
+.matrix-contestants td { text-align: center; padding: 0.2rem 0.3rem; }
+.matrix-contestants .col-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  text-align: center;
+  vertical-align: bottom;
+  line-height: 1.15;
+  font-weight: 600;
+}
+.matrix-contestants .col-label .series-icon { display: flex; justify-content: center; color: var(--accent); margin-bottom: 0.15rem; }
+.matrix-contestants .pick-players { justify-content: center; margin-left: 0; gap: 0.15rem; }
+.contestant-cell { display: flex; align-items: center; gap: 0.5rem; }
+.contestant-cell .pick-avatar { width: 30px; height: 30px; }
+.contestant-cell .pick-who { flex: none; }
+
+.pick-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem 0.05rem 0.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.pick-chip img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; background: #223528; }
+.pick-chip em { color: var(--text-dim); font-style: normal; font-size: 0.7rem; }
+
+.integrity { margin-top: 2rem; color: var(--text-dim); }
+.integrity summary { cursor: pointer; }
+.integrity h3 { font-size: 0.95rem; margin: 1rem 0 0.4rem; }
+.integrity table { min-width: 0; }

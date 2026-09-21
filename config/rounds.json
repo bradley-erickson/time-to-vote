@@ -1,6 +1,8 @@
 [
   {
     "id": "pre_premiere",
+    "short": "Pre",
+    "abbr": "P",
     "title": "Pre-Premiere",
     "subtitle": "Blind picks \u2014 fill this out before the season premieres.",
     "questions": [
@@ -46,6 +48,8 @@
   },
   {
     "id": "post_premiere",
+    "short": "Ep 1",
+    "abbr": "1",
     "title": "After Episode 1",
     "subtitle": "Fill this out once, after watching the premiere.",
     "questions": [
@@ -68,6 +72,10 @@
         "slots": [
           "Puzzle",
           "Physical"
+        ],
+        "slot_icons": [
+          "ph-puzzle-piece-fill",
+          "ph-barbell-fill"
         ],
         "icon": "ph-knife-fill"
       },
@@ -97,6 +105,10 @@
           "Victim",
           "Mastermind"
         ],
+        "slot_icons": [
+          "ph-target-fill",
+          "ph-brain-fill"
+        ],
         "icon": "eye-slash-fill"
       },
       {
@@ -122,6 +134,8 @@
   },
   {
     "id": "merge",
+    "short": "Merge",
+    "abbr": "M",
     "title": "At the Merge",
     "subtitle": "Fill this out once, right after the merge episode airs.",
     "questions": [

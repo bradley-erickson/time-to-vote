@@ -48,7 +48,7 @@
   </div>
 </div>
 
-<script src="/static/icons.js"></script>
+<script src="{{ static_url('icons.js') }}"></script>
 <script>
 (function () {
   const ROUND = {{ round | to_json | safe }};
