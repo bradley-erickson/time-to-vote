@@ -265,7 +265,9 @@
       const shouldDisable = isFull && !selected.has(id);
       card.classList.toggle('disabled', shouldDisable);
       card.classList.toggle('swappable', shouldDisable && swappable);
-      card.disabled = shouldDisable && !swappable;
+      // No `disabled` attribute: clicks inside a disabled button don't fire reliably,
+      // and the profile icon must stay usable on greyed-out tiles. toggle() guards instead.
+      card.setAttribute('aria-disabled', String(shouldDisable && !swappable));
     });
   }
 
@@ -342,8 +344,68 @@
       });
       card.appendChild(bar);
     }
+    addProfile(card, c);
     return card;
   }
+
+  // Little profile icon on each tile: hover (mouse) or tap shows age + occupation in a
+  // floating tooltip. It's positioned by the icon, not inside the tile, so it isn't
+  // clipped when the timeline strip squeezes the tiles short.
+  const tip = document.createElement('div');
+  tip.className = 'profile-tip';
+  tip.hidden = true;
+  document.body.appendChild(tip);
+  let pinnedId = null;
+
+  function hideTip() {
+    tip.hidden = true;
+    pinnedId = null;
+  }
+
+  function showTip(btn, c) {
+    tip.innerHTML = '';
+    const rows = [['profile-tip-name', c.name]];
+    if (c.age) rows.push(['profile-tip-age', `Age ${c.age}`]);
+    if (c.occupation) rows.push(['profile-tip-job', c.occupation]);
+    rows.forEach(([cls, text]) => {
+      const row = document.createElement('div');
+      row.className = cls;
+      row.textContent = text;
+      tip.appendChild(row);
+    });
+    tip.hidden = false;
+    const r = btn.getBoundingClientRect();
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - tip.offsetWidth / 2, window.innerWidth - tip.offsetWidth - 8));
+    let top = r.top - tip.offsetHeight - 8;
+    if (top < 8) top = r.bottom + 8;
+    tip.style.left = `${left}px`;
+    tip.style.top = `${top}px`;
+  }
+
+  function addProfile(card, c) {
+    if (!c.age && !c.occupation) return;
+    const btn = document.createElement('span');
+    btn.className = 'profile-btn';
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('aria-label', `About ${c.first_name}`);
+    const [viewBox, body] = window.ICONS['person-fill'];
+    btn.innerHTML = `<svg viewBox="${viewBox}" fill="currentColor" aria-hidden="true">${body}</svg>`;
+    btn.addEventListener('mouseenter', () => showTip(btn, c));
+    btn.addEventListener('mouseleave', () => { if (pinnedId !== c.id) tip.hidden = true; });
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't toggle the pick underneath
+      if (pinnedId === c.id) {
+        hideTip();
+      } else {
+        pinnedId = c.id;
+        showTip(btn, c);
+      }
+    });
+    card.appendChild(btn);
+  }
+
+  // Any tap elsewhere (including picking a tile) closes an open profile.
+  document.addEventListener('click', hideTip);
 
   function renderQuestion() {
     const q = ROUND.questions[activeIndex];
@@ -352,6 +414,7 @@
     if (q.slots) hintEl.textContent += ` In order: ${q.slots.join(', then ')}.`;
     if (q.hint) hintEl.textContent += ` ${q.hint}`;
 
+    hideTip();
     grid.innerHTML = '';
     CONTESTANTS.forEach((c) => {
       const card = buildTile(c);
@@ -377,6 +440,8 @@
     const q = ROUND.questions[activeIndex];
     const current = answers[q.id];
     const idx = current.indexOf(id);
+    // Multi-pick question already full: other tiles are locked (deselect one first).
+    if (idx < 0 && typeof q.pick_count === 'number' && q.pick_count > 1 && current.length >= q.pick_count) return;
     if (idx >= 0) {
       current.splice(idx, 1);
     } else if (q.pick_count === 'any' || current.length < q.pick_count) {

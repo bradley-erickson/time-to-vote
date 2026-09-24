@@ -204,6 +204,31 @@ def home(request: Request):
     )
 
 
+@app.get("/cast")
+def cast(request: Request):
+    """Everyone at a glance: who's still in, who's out (in the order they went
+    home), and each person's timeline events."""
+    contestants = get_contestants()
+    by_id = {c["id"]: c for c in contestants}
+    eliminated_ids = get_eliminated_ids()
+    out_set = set(eliminated_ids)
+    events = {}
+    for event in get_history():
+        for cid in event.get("contestants", []):
+            events.setdefault(cid, []).append(event)
+    return templates.TemplateResponse(
+        request,
+        "cast.html",
+        {
+            "remaining": [c for c in contestants if c["id"] not in out_set],
+            "out": [by_id[cid] for cid in eliminated_ids if cid in by_id],
+            "events": events,
+            "total": len(contestants),
+            "jury_count": len(get_jury_ids()),
+        },
+    )
+
+
 @app.get("/round/{round_id}")
 def round_form(request: Request, round_id: str):
     round_ = resolve_round(round_id)

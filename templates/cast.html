@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Cast · Time to Vote{% endblock %}
+{% block main_class %}main-wide{% endblock %}
+
+{% macro cast_card(c, is_out) %}
+<div class="cast-card{% if is_out %} eliminated{% endif %}">
+  <img src="{{ c.image or '/static/images/placeholder.svg' }}" alt="{{ c.name }}">
+  <h3>{{ c.name }}</h3>
+  {% if c.age %}<p class="cast-age">Age {{ c.age }}</p>{% endif %}
+  {% if c.occupation %}<p class="cast-occupation">{{ c.occupation }}</p>{% endif %}
+  {% if c.hometown %}<p class="cast-hometown">{{ c.hometown }}</p>{% endif %}
+  {% if events.get(c.id) %}
+  <ul class="cast-events">
+    {% for e in events[c.id] %}
+    <li class="cast-event{% if e.type == 'vote_out' %} out{% endif %}">
+      {% if e.episode %}<span class="cast-event-ep">Ep {{ e.episode }}</span>{% endif %}
+      <span class="cast-event-label">
+        {%- if e.type == 'vote_out' -%}
+          Voted out{% if e.jury %} · Jury{% endif %}
+        {%- else -%}
+          {{ e.label }}
+        {%- endif -%}
+      </span>
+      {% if e.note %}<span class="cast-event-note">{{ e.note }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if c.tribe_colors %}
+  <span class="tribe-bar">
+    {% for color in c.tribe_colors %}<span class="tribe-bar-segment" style="background: {{ color }}"></span>{% endfor %}
+  </span>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<a class="back-link" href="/">&larr; Home</a>
+<h1>The Cast</h1>
+<p class="subtitle">
+  <strong>{{ remaining | length }}</strong> of {{ total }} still in it
+  {%- if jury_count %} · {{ jury_count }} on the jury{% endif %}
+</p>
+
+<h2 class="cast-section">Still in it</h2>
+<div class="cast-grid">
+  {% for c in remaining %}{{ cast_card(c, false) }}{% else %}<p class="subtitle">Nobody left.</p>{% endfor %}
+</div>
+
+{% if out %}
+<h2 class="cast-section">Voted out</h2>
+<div class="cast-grid">
+  {% for c in out %}{{ cast_card(c, true) }}{% endfor %}
+</div>
+{% endif %}
+{% endblock %}
