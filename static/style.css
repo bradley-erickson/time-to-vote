@@ -187,6 +187,10 @@ h1 { margin-bottom: 0.25rem; }
 
 .contestant-card.disabled:active { transform: none; }
 
+/* Greyed out but still tappable: pick-1 questions, where a tap swaps the pick. */
+.contestant-card.disabled.swappable { cursor: pointer; }
+.contestant-card.disabled.swappable:active { transform: scale(0.96); }
+
 .contestant-card img {
   width: 100%;
   flex: 1;

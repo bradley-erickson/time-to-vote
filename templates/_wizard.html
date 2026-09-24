@@ -227,9 +227,11 @@
   function renderGrid() {
     const q = ROUND.questions[activeIndex];
     const selected = new Set(answers[q.id] || []);
-    // Multi-pick questions lock the other tiles once full (deselect one to change).
-    // Pick-1 questions stay open: tapping another tile swaps the pick (see toggle()).
-    const isFull = q.pick_count !== 'any' && q.pick_count > 1 && selected.size === q.pick_count;
+    // Once a question is full, the other tiles grey out. Multi-pick questions also
+    // lock them (deselect one to change); pick-1 questions keep them tappable so a
+    // tap swaps the pick (see toggle()).
+    const isFull = q.pick_count !== 'any' && selected.size === q.pick_count;
+    const swappable = q.pick_count === 1;
     grid.querySelectorAll('.contestant-card').forEach((card) => {
       const id = card.dataset.id;
       card.style.boxShadow = ringsFor(id);
@@ -262,7 +264,8 @@
       }
       const shouldDisable = isFull && !selected.has(id);
       card.classList.toggle('disabled', shouldDisable);
-      card.disabled = shouldDisable;
+      card.classList.toggle('swappable', shouldDisable && swappable);
+      card.disabled = shouldDisable && !swappable;
     });
   }
 
