@@ -49,6 +49,7 @@
 </div>
 
 <script src="{{ static_url('icons.js') }}"></script>
+<script src="{{ static_url('dialog.js') }}"></script>
 <script>
 (function () {
   const ROUND = {{ round | to_json | safe }};
@@ -226,7 +227,9 @@
   function renderGrid() {
     const q = ROUND.questions[activeIndex];
     const selected = new Set(answers[q.id] || []);
-    const isFull = q.pick_count !== 'any' && selected.size === q.pick_count;
+    // Multi-pick questions lock the other tiles once full (deselect one to change).
+    // Pick-1 questions stay open: tapping another tile swaps the pick (see toggle()).
+    const isFull = q.pick_count !== 'any' && q.pick_count > 1 && selected.size === q.pick_count;
     grid.querySelectorAll('.contestant-card').forEach((card) => {
       const id = card.dataset.id;
       card.style.boxShadow = ringsFor(id);
@@ -409,7 +412,14 @@
 
   function finish() {
     if (!allComplete()) return;
-    if (!confirm(`Lock in ${player}'s picks? No takebacks after this.`)) return;
+    // In-page dialog, not window.confirm — native dialogs don't reliably show in fullscreen.
+    ttvConfirm(`Lock in ${player}'s picks? No takebacks after this.`, {
+      confirmLabel: 'Lock in',
+      cancelLabel: 'Go back',
+    }).then((ok) => { if (ok) submit(); });
+  }
+
+  function submit() {
     stepQuestions.hidden = true;
 
     if (MODE === 'demo') {
@@ -443,9 +453,9 @@
         }
       })
       .catch(() => {
-        alert("Something went wrong locking that in — check with whoever's running the laptop.");
         stepQuestions.hidden = false;
         lockBtn.disabled = false;
+        ttvAlert("Something went wrong locking that in — check with whoever's running the laptop.");
       });
   }
 

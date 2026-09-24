@@ -505,6 +505,43 @@ h1 { margin-bottom: 0.25rem; }
 }
 .kiosk-exit:hover { opacity: 1; }
 
+/* In-page confirm/alert dialog (static/dialog.js) — replaces native
+   confirm()/alert(), which don't reliably show while fullscreen. */
+.ttv-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.7);
+}
+.ttv-dialog {
+  width: min(480px, 100%);
+  background: var(--panel);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 1.75rem;
+  text-align: center;
+}
+.ttv-dialog-message {
+  margin: 0 0 1.5rem;
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+.ttv-dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+.ttv-dialog-actions .big-btn { flex: 1; }
+.ttv-dialog-actions .ttv-dialog-cancel {
+  background: var(--border);
+  color: var(--text);
+}
+.ttv-dialog-actions .ttv-dialog-cancel:hover { background: var(--accent-dim); }
+
 .banner-demo {
   background: rgba(217, 164, 65, 0.15);
   color: var(--accent);

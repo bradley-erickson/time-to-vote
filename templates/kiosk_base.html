@@ -8,6 +8,23 @@
 </head>
 <body>
   {% block content %}{% endblock %}
-  <a href="/" class="kiosk-exit" onclick="return confirm('End the voting session and return to the admin view?')">exit</a>
+  <a href="/" class="kiosk-exit" id="kiosk-exit">exit</a>
+  <script src="{{ static_url('dialog.js') }}"></script>
+  <script>
+    // In-page dialog, not window.confirm — native dialogs don't reliably show in fullscreen.
+    document.getElementById('kiosk-exit').addEventListener('click', function (e) {
+      e.preventDefault();
+      ttvConfirm('End the voting session and return to the admin view?', {
+        confirmLabel: 'Exit',
+        cancelLabel: 'Stay',
+      }).then(function (ok) {
+        if (!ok) return;
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(function () {});
+        }
+        window.location.href = '/';
+      });
+    });
+  </script>
 </body>
 </html>
