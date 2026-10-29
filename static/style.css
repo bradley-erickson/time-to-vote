@@ -1128,3 +1128,30 @@ input[type="color"] {
 .integrity summary { cursor: pointer; }
 .integrity h3 { font-size: 0.95rem; margin: 1rem 0 0.4rem; }
 .integrity table { min-width: 0; }
+
+/* Tribe swap editor (admin) */
+.swap-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.swap-column {
+  border: 2px solid var(--tribe-color, var(--text-dim));
+  border-radius: 10px;
+  padding: 10px;
+  min-height: 120px;
+  cursor: pointer;
+}
+.swap-column h3 { margin: 0 0 8px; color: var(--text); }
+.swap-count { color: var(--text-dim); font-weight: normal; }
+.swap-members { display: flex; flex-wrap: wrap; gap: 6px; }
+.swap-chip {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--text-dim);
+  background: transparent;
+  color: var(--text);
+  cursor: grab;
+}
+.swap-chip.selected { background: var(--accent); color: #000; border-color: var(--accent); }

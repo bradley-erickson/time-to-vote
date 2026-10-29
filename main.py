@@ -539,7 +539,7 @@ def get_event_labels():
 @app.get("/admin")
 def admin_page(request: Request):
     active_tab = request.query_params.get("tab", "history")
-    if active_tab not in ("history", "contestants", "tribes", "players"):
+    if active_tab not in ("history", "contestants", "tribes", "swap", "players"):
         active_tab = "history"
     return templates.TemplateResponse(
         request,
@@ -549,6 +549,10 @@ def admin_page(request: Request):
             "contestants": get_contestants(),
             "tribes": get_tribes(),
             "active_contestants": get_active_contestants(),
+            "swap_people": [
+                {"id": c["id"], "name": c["name"], "tribe": (c.get("tribes") or [""])[-1]}
+                for c in get_active_contestants()
+            ],
             "event_labels": get_event_labels(),
             "history": resolve_history(),
             "players": get_players(),
@@ -641,6 +645,48 @@ async def admin_update_tribe(request: Request):
                 t["color"] = color
     save_config("tribes.json", tribes)
     return RedirectResponse("/admin?tab=tribes", status_code=303)
+
+
+@app.post("/admin/tribes/swap")
+async def admin_tribe_swap(request: Request):
+    """Record a tribe swap. Like the wiki, a swap restates *everyone's* tribe
+    at that point in time, so every active contestant gets a new entry in
+    their tribes list — even those who stayed put. Voted-out contestants
+    are left alone."""
+    form = await request.form()
+    try:
+        assignments = json.loads(form.get("assignments") or "{}")
+    except json.JSONDecodeError:
+        assignments = {}
+    tribes = get_tribes_by_id()
+    active_ids = {c["id"] for c in get_active_contestants()}
+    episode_raw = (form.get("episode") or "").strip()
+
+    contestants = load_config("contestants.json")
+    changed = False
+    for c in contestants:
+        if c["id"] not in active_ids:
+            continue
+        new_tribe = assignments.get(c["id"])
+        if new_tribe not in tribes:
+            continue
+        c.setdefault("tribes", []).append(new_tribe)
+        changed = True
+    if changed:
+        save_config("contestants.json", contestants)
+        history = get_history()
+        history.append(
+            {
+                "id": uuid.uuid4().hex[:8],
+                "type": "text",
+                "contestants": [],
+                "label": "Tribe Swap",
+                "note": None,
+                "episode": int(episode_raw) if episode_raw.isdigit() else None,
+            }
+        )
+        save_config("history.json", history)
+    return RedirectResponse("/admin?tab=swap", status_code=303)
 
 
 @app.post("/admin/contestants/{contestant_id}/add_tribe")

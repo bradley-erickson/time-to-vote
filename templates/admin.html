@@ -14,6 +14,7 @@
   <a class="admin-tab-link {{ 'active' if active_tab == 'history' }}" href="/admin?tab=history">History</a>
   <a class="admin-tab-link {{ 'active' if active_tab == 'contestants' }}" href="/admin?tab=contestants">Contestants</a>
   <a class="admin-tab-link {{ 'active' if active_tab == 'tribes' }}" href="/admin?tab=tribes">Tribes</a>
+  <a class="admin-tab-link {{ 'active' if active_tab == 'swap' }}" href="/admin?tab=swap">Tribe swap</a>
   <a class="admin-tab-link {{ 'active' if active_tab == 'players' }}" href="/admin?tab=players">Players</a>
 </div>
 
@@ -154,6 +155,89 @@
     <input type="color" name="color" value="#d9a441">
     <button type="submit" class="big-btn">Add tribe</button>
   </form>
+</section>
+
+{% elif active_tab == 'swap' %}
+<section class="results-section">
+  <p class="subtitle">
+    Everyone starts on their current tribe. Tap a player, then tap the tribe
+    to move them to (or drag them). Saving records every active player's
+    tribe at this point — including those who didn't move — and adds a
+    Tribe Swap to the history. Add any new tribe in the
+    <a href="/admin?tab=tribes">Tribes tab</a> first.
+  </p>
+  <form method="post" action="/admin/tribes/swap" id="swap-form" class="admin-card">
+    <input type="hidden" name="assignments" id="swap-assignments">
+    <div class="swap-columns" id="swap-columns">
+      {% for t in tribes %}
+      <div class="swap-column" data-tribe="{{ t.id }}" style="--tribe-color: {{ t.color }};">
+        <h3>{{ t.name }} <span class="swap-count"></span></h3>
+        <div class="swap-members"></div>
+      </div>
+      {% endfor %}
+      <div class="swap-column" data-tribe="" hidden>
+        <h3>No tribe yet</h3>
+        <div class="swap-members"></div>
+      </div>
+    </div>
+    <label class="pick-hint" for="swap-episode">Episode</label>
+    <input type="number" id="swap-episode" name="episode" min="1" placeholder="#">
+    <button type="submit" class="big-btn" id="swap-save">Save tribe configuration</button>
+  </form>
+  <script>
+    (function () {
+      const people = {{ swap_people | to_json | safe }};
+      const columns = Array.from(document.querySelectorAll('.swap-column'));
+      const byTribe = Object.fromEntries(columns.map((el) => [el.dataset.tribe, el]));
+      const assign = {};
+      let selected = null;
+      people.forEach((p) => { assign[p.id] = p.tribe; });
+
+      function render() {
+        columns.forEach((col) => { col.querySelector('.swap-members').textContent = ''; });
+        people.forEach((p) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'swap-chip' + (selected === p.id ? ' selected' : '');
+          chip.draggable = true;
+          chip.textContent = p.name;
+          chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selected = selected === p.id ? null : p.id;
+            render();
+          });
+          chip.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', p.id));
+          byTribe[assign[p.id]].querySelector('.swap-members').appendChild(chip);
+        });
+        columns.forEach((col) => {
+          const n = col.querySelector('.swap-members').children.length;
+          const count = col.querySelector('.swap-count');
+          if (count) count.textContent = '(' + n + ')';
+          if (col.dataset.tribe === '') col.hidden = n === 0;
+        });
+        document.getElementById('swap-assignments').value = JSON.stringify(assign);
+        document.getElementById('swap-save').disabled = people.some((p) => !assign[p.id]);
+      }
+
+      function move(id, tribe) {
+        if (!id || !(id in assign)) return;
+        assign[id] = tribe;
+        selected = null;
+        render();
+      }
+
+      columns.forEach((col) => {
+        if (col.dataset.tribe === '') return;
+        col.addEventListener('click', () => { if (selected) move(selected, col.dataset.tribe); });
+        col.addEventListener('dragover', (e) => e.preventDefault());
+        col.addEventListener('drop', (e) => {
+          e.preventDefault();
+          move(e.dataTransfer.getData('text/plain'), col.dataset.tribe);
+        });
+      });
+      render();
+    })();
+  </script>
 </section>
 
 {% elif active_tab == 'players' %}
