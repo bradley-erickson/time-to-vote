@@ -514,11 +514,14 @@ h1 { margin-bottom: 0.25rem; }
   object-fit: cover;
   background: #223528;
   opacity: 0.85;
-  filter: grayscale(1) brightness(0.9);
   margin-left: -8px;
 }
 
 .history-avatars img:first-child { margin-left: 0; }
+
+.history-vote-out .history-avatars img {
+  filter: grayscale(1) brightness(0.9);
+}
 
 .history-names {
   font-size: 0.75rem;
@@ -1157,3 +1160,5 @@ input[type="color"] {
   cursor: grab;
 }
 .swap-chip.selected { background: var(--accent); color: #000; border-color: var(--accent); }
+.swap-gone { border-style: dashed; border-color: var(--text-dim); }
+.swap-gone .swap-chip { color: var(--text-dim); }

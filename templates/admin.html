@@ -160,10 +160,12 @@
 {% elif active_tab == 'swap' %}
 <section class="results-section">
   <p class="subtitle">
-    Everyone starts on their current tribe. Tap a player, then tap the tribe
-    to move them to (or drag them). Saving records every active player's
-    tribe at this point — including those who didn't move — and adds a
-    Tribe Swap to the history. Add any new tribe in the
+    Everyone starts on their current tribe; voted-out players start in
+    <strong>Gone</strong>. Tap a player, then tap the tribe to move them to
+    (or drag them). Saving records the tribe of everyone placed in one —
+    including those who didn't move — and skips anyone left in Gone. To enter
+    a past swap, drag the people who were still around back into their
+    tribes. Add any new tribe in the
     <a href="/admin?tab=tribes">Tribes tab</a> first.
   </p>
   <form method="post" action="/admin/tribes/swap" id="swap-form" class="admin-card">
@@ -177,6 +179,10 @@
       {% endfor %}
       <div class="swap-column" data-tribe="" hidden>
         <h3>No tribe yet</h3>
+        <div class="swap-members"></div>
+      </div>
+      <div class="swap-column swap-gone" data-tribe="__gone">
+        <h3>Gone <span class="swap-count"></span></h3>
         <div class="swap-members"></div>
       </div>
     </div>
@@ -217,7 +223,7 @@
           if (col.dataset.tribe === '') col.hidden = n === 0;
         });
         document.getElementById('swap-assignments').value = JSON.stringify(assign);
-        document.getElementById('swap-save').disabled = people.some((p) => !assign[p.id]);
+        document.getElementById('swap-save').disabled = people.some((p) => assign[p.id] === '');
       }
 
       function move(id, tribe) {

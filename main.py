@@ -548,6 +548,7 @@ def get_event_labels():
 @app.get("/admin")
 def admin_page(request: Request):
     active_tab = request.query_params.get("tab", "history")
+    eliminated = set(get_eliminated_ids())
     if active_tab not in ("history", "contestants", "tribes", "swap", "players"):
         active_tab = "history"
     return templates.TemplateResponse(
@@ -559,8 +560,12 @@ def admin_page(request: Request):
             "tribes": get_tribes(),
             "active_contestants": get_active_contestants(),
             "swap_people": [
-                {"id": c["id"], "name": c["name"], "tribe": (c.get("tribes") or [""])[-1]}
-                for c in get_active_contestants()
+                {
+                    "id": c["id"],
+                    "name": c["name"],
+                    "tribe": "__gone" if c["id"] in eliminated else (c.get("tribes") or [""])[-1],
+                }
+                for c in get_contestants()
             ],
             "event_labels": get_event_labels(),
             "history": resolve_history(),
@@ -659,24 +664,22 @@ async def admin_update_tribe(request: Request):
 @app.post("/admin/tribes/swap")
 async def admin_tribe_swap(request: Request):
     """Record a tribe swap. Like the wiki, a swap restates *everyone's* tribe
-    at that point in time, so every active contestant gets a new entry in
-    their tribes list — even those who stayed put. Voted-out contestants
-    are left alone."""
+    at that point in time, so everyone placed in a tribe gets a new entry in
+    their tribes list — even those who stayed put. Anyone left in the "Gone"
+    column (not in the game at that point) is skipped, which also lets a
+    past swap be entered after people have been voted out."""
     form = await request.form()
     try:
         assignments = json.loads(form.get("assignments") or "{}")
     except json.JSONDecodeError:
         assignments = {}
     tribes = get_tribes_by_id()
-    active_ids = {c["id"] for c in get_active_contestants()}
     episode_raw = (form.get("episode") or "").strip()
     log_event = form.get("log_event") == "on"
 
     contestants = load_config("contestants.json")
     changed = False
     for c in contestants:
-        if c["id"] not in active_ids:
-            continue
         new_tribe = assignments.get(c["id"])
         if new_tribe not in tribes:
             continue
