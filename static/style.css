@@ -514,7 +514,7 @@ h1 { margin-bottom: 0.25rem; }
   object-fit: cover;
   background: #223528;
   opacity: 0.85;
-  filter: saturate(0.6) brightness(0.92);
+  filter: grayscale(1) brightness(0.9);
   margin-left: -8px;
 }
 
@@ -538,6 +538,8 @@ h1 { margin-bottom: 0.25rem; }
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+
+.history-label-out { color: var(--text-dim); }
 
 .history-note {
   font-size: 0.65rem;

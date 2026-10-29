@@ -84,7 +84,16 @@ def get_contestants():
 
 
 def get_history():
-    return load_config("history.json")
+    """History in episode order. Within an episode, markers (swaps,
+    challenge wins) come before that night's vote-out. An event with no
+    episode number stays after whatever precedes it in the file."""
+    history = load_config("history.json")
+    keyed = []
+    episode = 0
+    for i, event in enumerate(history):
+        episode = event.get("episode") or episode
+        keyed.append(((episode, 1 if event.get("type") == "vote_out" else 0, i), event))
+    return [event for _, event in sorted(keyed, key=lambda k: k[0])]
 
 
 def get_eliminated_ids():
@@ -661,6 +670,7 @@ async def admin_tribe_swap(request: Request):
     tribes = get_tribes_by_id()
     active_ids = {c["id"] for c in get_active_contestants()}
     episode_raw = (form.get("episode") or "").strip()
+    log_event = form.get("log_event") == "on"
 
     contestants = load_config("contestants.json")
     changed = False
@@ -674,18 +684,30 @@ async def admin_tribe_swap(request: Request):
         changed = True
     if changed:
         save_config("contestants.json", contestants)
-        history = get_history()
-        history.append(
-            {
-                "id": uuid.uuid4().hex[:8],
-                "type": "text",
-                "contestants": [],
-                "label": "Tribe Swap",
-                "note": None,
-                "episode": int(episode_raw) if episode_raw.isdigit() else None,
-            }
-        )
-        save_config("history.json", history)
+        if log_event:
+            history = get_history()
+            history.append(
+                {
+                    "id": uuid.uuid4().hex[:8],
+                    "type": "text",
+                    "contestants": [],
+                    "label": "Tribe Swap",
+                    "note": None,
+                    "episode": int(episode_raw) if episode_raw.isdigit() else None,
+                }
+            )
+            save_config("history.json", history)
+    return RedirectResponse("/admin?tab=swap", status_code=303)
+
+
+@app.post("/admin/tribes/reset")
+async def admin_reset_tribes():
+    """Clear every contestant's tribe list so the season's tribes can be
+    re-entered from scratch through the tribe swap screen."""
+    contestants = load_config("contestants.json")
+    for c in contestants:
+        c["tribes"] = []
+    save_config("contestants.json", contestants)
     return RedirectResponse("/admin?tab=swap", status_code=303)
 
 

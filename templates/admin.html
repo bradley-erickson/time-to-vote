@@ -182,6 +182,7 @@
     </div>
     <label class="pick-hint" for="swap-episode">Episode</label>
     <input type="number" id="swap-episode" name="episode" min="1" placeholder="#">
+    <label class="admin-checkbox"><input type="checkbox" name="log_event" checked> Add a "Tribe Swap" to the history (uncheck for the starting tribes, or if you've already added it)</label>
     <button type="submit" class="big-btn" id="swap-save">Save tribe configuration</button>
   </form>
   <script>
@@ -237,6 +238,25 @@
       });
       render();
     })();
+  </script>
+
+  <form method="post" action="/admin/tribes/reset" class="admin-card" id="reset-tribes-form">
+    <h3>Start over</h3>
+    <p class="pick-hint">
+      Clears every contestant's tribes (history is untouched) so you can re-enter
+      them in order: starting tribes first, then each swap with its episode number.
+    </p>
+    <button type="submit" class="big-btn">Reset all tribes</button>
+  </form>
+  <script src="{{ static_url('dialog.js') }}"></script>
+  <script>
+    document.getElementById('reset-tribes-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      if (await ttvConfirm('Clear every contestant\'s tribes? You\'ll need to re-enter them.', { confirmLabel: 'Reset' })) {
+        form.submit();
+      }
+    });
   </script>
 </section>
 
